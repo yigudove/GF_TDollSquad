@@ -1,11 +1,10 @@
 # Visual Studio 2015 user specific files
 .vs/
 
-# Rider
 .idea/
-target/
-**/.idea/workspace.xml **/.idea/tasks.xml
 
+# Rider
+Plugins/Developer/RiderLink/*
 
 # Compiled Object files
 *.slo
@@ -47,9 +46,6 @@ target/
 *.VC.db
 *.VC.opendb
 
-# RiderLink plugins
-Plugins/Developer/RiderLink/*
-
 # Precompiled Assets
 SourceArt/**/*.png
 SourceArt/**/*.tga
@@ -85,6 +81,3 @@ DerivedDataCache/*
 # Ignore Content Asset
 Content/*
 !Content/GFContent
-.idea/.idea.GF_TDollSquad/.idea/workspace.xml
-.idea/.idea.GF_TDollSquad/.idea/workspace.xml
-.idea/.idea.GF_TDollSquad/.idea/workspace.xml
