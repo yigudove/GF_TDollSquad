@@ -1,11 +1,15 @@
 #include "BaseCharacter.h"
 
+#include "Framework/Application/SlateApplication.h"
+#include "GameFramework/GameUserSettings.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
+#include "OnlineSubsystem.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -22,6 +26,20 @@ ABaseCharacter::ABaseCharacter()
 
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
+
+	IOnlineSubsystem *OSS = IOnlineSubsystem::Get();
+	if(OSS)
+	{
+		OSSInterface = OSS->GetSessionInterface();
+		if(GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.0f,
+				FColor::Blue,
+				FString::Printf(TEXT("Found OSS: %s"), *OSS->GetSubsystemName().ToString()));
+		}
+	}
 }
 
 void ABaseCharacter::BeginPlay()
@@ -51,6 +69,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		PEI->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABaseCharacter::Move);
 		PEI->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABaseCharacter::Look);
 		PEI->BindAction(InteractAction, ETriggerEvent::Started, this, &ABaseCharacter::Interact);
+		PEI->BindAction(QuitGameAction, ETriggerEvent::Started, this, &ABaseCharacter::QuitGame);
 	}
 }
 
@@ -94,4 +113,30 @@ void ABaseCharacter::Look(const FInputActionValue& Value)
 void ABaseCharacter::Interact(const FInputActionValue& Value)
 {
 	UE_LOG(LogTemp, Log, TEXT("Trigger Interact Action."));
+
+	// UGameUserSettings* MyGameSettings = GEngine->GetGameUserSettings();
+	// // MyGameSettings->SetFullscreenMode(EWindowMode::Fullscreen);
+	// MyGameSettings->SetFullscreenMode(EWindowMode::Windowed);
+	// MyGameSettings->ApplySettings(true);
+	if(GEngine->GetGameUserSettings()->GetFullscreenMode()==EWindowMode::Fullscreen)
+	{
+		GEngine->GetGameUserSettings()->SetFullscreenMode(EWindowMode::Windowed);
+		GEngine->GetGameUserSettings()->SetScreenResolution(FIntPoint(1800, 1000));
+		GEngine->GetGameUserSettings()->ApplySettings(true);
+	}
+	else
+	{
+		GEngine->GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
+		GEngine->GetGameUserSettings()->ApplySettings(true);
+	}
+
+}
+
+void ABaseCharacter::QuitGame(const FInputActionValue& Value)
+{
+	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	if (PlayerController)
+	{
+		PlayerController->ConsoleCommand("quit");
+	}
 }

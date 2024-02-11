@@ -14,7 +14,9 @@ public class GF_TDollSquad : ModuleRules
 			"CoreUObject", 
 			"Engine",
 			"InputCore",
-			"EnhancedInput"
+			"EnhancedInput",
+			"OnlineSubsystem",
+			"OnlineSubsystemSteam",
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

@@ -4,6 +4,9 @@
 #include "GameFramework/Character.h"
 
 #include "EnhancedInputComponent.h"
+#include "Interfaces/OnlineSessionInterface.h"
+
+
 #include "BaseCharacter.generated.h"
 
 UCLASS()
@@ -33,9 +36,15 @@ protected:
 	class UInputAction *LookAction;
 	UPROPERTY(EditAnywhere, Category = Input)
 	class UInputAction *InteractAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	class UInputAction *QuitGameAction;
 #pragma  endregion
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
+	void QuitGame(const FInputActionValue& Value);
+
+public:
+	IOnlineSessionPtr OSSInterface;
 };
