@@ -1,5 +1,7 @@
 #include "BaseCharacter.h"
 
+#include  "OnlineSessionSettings.h"
+
 #include "Framework/Application/SlateApplication.h"
 #include "GameFramework/GameUserSettings.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -11,7 +13,9 @@
 
 #include "OnlineSubsystem.h"
 
-ABaseCharacter::ABaseCharacter()
+ABaseCharacter::ABaseCharacter():
+CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete)),
+FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete ))
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -139,4 +143,147 @@ void ABaseCharacter::QuitGame(const FInputActionValue& Value)
 	{
 		PlayerController->ConsoleCommand("quit");
 	}
+}
+
+void ABaseCharacter::CreateGameSession()
+{
+	if(!OSSInterface.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("!OSSInterface.IsValid()"));
+		return;
+	}
+	
+	GEngine->AddOnScreenDebugMessage(
+	-1,
+	15.0f,
+	FColor::Blue,
+	FString::Printf(TEXT("Try Create Session"))
+	);
+	
+	auto ExistingSession = OSSInterface->GetNamedSession(NAME_GameSession);
+	if(ExistingSession != nullptr)
+	{
+		OSSInterface->DestroySession(NAME_GameSession);
+	}
+
+	OSSInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
+	TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings() );
+
+	SessionSettings->bIsLANMatch = false;
+	SessionSettings->NumPublicConnections = 8;
+	SessionSettings->bAllowJoinInProgress = true;
+	SessionSettings->bAllowJoinViaPresence = true;
+	SessionSettings->bShouldAdvertise = true;
+	SessionSettings->bUsesPresence = true;
+	SessionSettings->bUseLobbiesIfAvailable = true;
+
+	SessionSettings->Set(FName("MatchType"), FString("FreeForAll"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	
+	const ULocalPlayer *LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	OSSInterface->CreateSession(
+		*LocalPlayer->GetPreferredUniqueNetId(),
+		NAME_GameSession,
+		*SessionSettings
+		);
+}
+
+void ABaseCharacter::JoinGameSession()
+{
+	if(!OSSInterface.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("!OSSInterface.IsValid()"));
+		return;
+	}
+
+	GEngine->AddOnScreenDebugMessage(
+	-1,
+	15.0f,
+	FColor::Blue,
+	FString::Printf(TEXT("Try Join Session"))
+	);
+
+	OSSInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+	
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	SessionSearch->MaxSearchResults = 10000;
+	SessionSearch->bIsLanQuery = false;
+	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+
+	const ULocalPlayer *LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	OSSInterface->FindSessions(
+		*LocalPlayer->GetPreferredUniqueNetId(),
+		SessionSearch.ToSharedRef()
+	);
+}
+
+void ABaseCharacter::OnCreateSessionComplete(FName SessionName, bool bSuccess)
+{
+	auto ExistingSession = OSSInterface->GetNamedSession(NAME_GameSession);
+	
+	if(bSuccess)
+	{
+		GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.0f,
+				FColor::Blue,
+				FString::Printf(TEXT("Create Session: %s"), *SessionName.ToString())
+				);
+        GEngine->AddOnScreenDebugMessage(
+            -1,
+            15.0f,
+            FColor::Blue,
+            FString::Printf(TEXT("Create Session Id: %s"), *ExistingSession->GetSessionIdStr())
+        );
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(
+						-1,
+						15.0f,
+						FColor::Blue,
+						FString::Printf(TEXT("Failed to create session"))
+						);
+	}
+}
+
+void ABaseCharacter::OnFindSessionsComplete(bool bSuccess)
+{
+	if(!OSSInterface.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("!OSSInterface.IsValid()"));
+		return;
+	}
+	
+	for(auto Result : 	SessionSearch->SearchResults)
+	{
+		FString Id = Result.GetSessionIdStr();
+		FString OwningUser = Result.Session.OwningUserName;
+		FString MatchType;
+		Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);
+		GEngine->AddOnScreenDebugMessage(
+		-1,
+		15.0f,
+		FColor::Cyan,
+		FString::Printf(TEXT("Session Id: %s, Owning User: %s"), *Id, *OwningUser)
+		);
+
+		if (MatchType == FString("FreeForAll"))
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					15.f,
+					FColor::Cyan,
+					FString::Printf(TEXT("Joining Match Type: %s"), *MatchType)
+				);
+			}
+
+			// OSSInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+
+			// const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+			// OSSInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, Result);
+		}
+	}
+
 }

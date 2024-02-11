@@ -45,6 +45,20 @@ protected:
 	void Interact(const FInputActionValue& Value);
 	void QuitGame(const FInputActionValue& Value);
 
+#pragma region Network
 public:
 	IOnlineSessionPtr OSSInterface;
+	
+protected:
+	UFUNCTION(BlueprintCallable)
+	void CreateGameSession();
+	UFUNCTION(BlueprintCallable)
+	void JoinGameSession();
+	
+	void OnCreateSessionComplete(FName SessionName, bool bSuccess);
+	void OnFindSessionsComplete(bool bSuccess);
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;
+	FOnFindSessionsCompleteDelegate FindSessionsCompleteDelegate;
+#pragma  endregion
 };
