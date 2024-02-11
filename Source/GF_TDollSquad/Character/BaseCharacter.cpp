@@ -15,7 +15,8 @@
 
 ABaseCharacter::ABaseCharacter():
 CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete)),
-FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete ))
+FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete )),
+JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete))
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -177,7 +178,7 @@ void ABaseCharacter::CreateGameSession()
 	SessionSettings->bUsesPresence = true;
 	SessionSettings->bUseLobbiesIfAvailable = true;
 
-	SessionSettings->Set(FName("MatchType"), FString("FreeForAll"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	SessionSettings->Set(FName("GF_Key"), FString("GF_Value"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 	
 	const ULocalPlayer *LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	OSSInterface->CreateSession(
@@ -234,6 +235,12 @@ void ABaseCharacter::OnCreateSessionComplete(FName SessionName, bool bSuccess)
             FColor::Blue,
             FString::Printf(TEXT("Create Session Id: %s"), *ExistingSession->GetSessionIdStr())
         );
+
+		UWorld * World = GetWorld();
+		if(World)
+		{
+			World->ServerTravel(FString("/Game/GFContent/Maps/BasicMap?Listen"));
+		}
 	}
 	else
 	{
@@ -258,8 +265,8 @@ void ABaseCharacter::OnFindSessionsComplete(bool bSuccess)
 	{
 		FString Id = Result.GetSessionIdStr();
 		FString OwningUser = Result.Session.OwningUserName;
-		FString MatchType;
-		Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);
+		FString MatchTypeValue;
+		Result.Session.SessionSettings.Get(FName("GF_Key"), MatchTypeValue);
 		GEngine->AddOnScreenDebugMessage(
 		-1,
 		15.0f,
@@ -267,7 +274,7 @@ void ABaseCharacter::OnFindSessionsComplete(bool bSuccess)
 		FString::Printf(TEXT("Session Id: %s, Owning User: %s"), *Id, *OwningUser)
 		);
 
-		if (MatchType == FString("FreeForAll"))
+		if (MatchTypeValue == FString("GF_Value"))
 		{
 			if (GEngine)
 			{
@@ -275,15 +282,45 @@ void ABaseCharacter::OnFindSessionsComplete(bool bSuccess)
 					-1,
 					15.f,
 					FColor::Cyan,
-					FString::Printf(TEXT("Joining Match Type: %s"), *MatchType)
+					FString::Printf(TEXT("Joining Match Type: %s"), *MatchTypeValue)
 				);
 			}
 
-			// OSSInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+			OSSInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
 
-			// const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-			// OSSInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, Result);
+			const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+			OSSInterface->JoinSession(
+				*LocalPlayer->GetPreferredUniqueNetId(),
+				NAME_GameSession,
+				Result
+				);
 		}
+	}
+
+}
+
+void ABaseCharacter::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type JoinResult)
+{
+	if(!OSSInterface.IsValid())
+	{
+		return;
+	}
+
+	FString SessionAddress;
+	if(	OSSInterface->GetResolvedConnectString(NAME_GameSession, SessionAddress))
+	{
+			GEngine->AddOnScreenDebugMessage(
+			-1,
+			15.f,
+			FColor::Green,
+			FString::Printf(TEXT("Connect to  SessionAddress: %s"), *SessionAddress)
+			);
+
+			APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController();
+			if(PC)
+			{
+				PC->ClientTravel(SessionAddress, TRAVEL_Absolute);
+			}
 	}
 
 }
