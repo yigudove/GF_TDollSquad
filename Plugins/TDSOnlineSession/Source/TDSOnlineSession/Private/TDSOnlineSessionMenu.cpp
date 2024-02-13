@@ -9,8 +9,9 @@
 #include "Components/Button.h"
 
 
-void UTDSOnlineSessionMenu::MenuSetup(int32 NumConnections, FString SessionName)
+void UTDSOnlineSessionMenu::MenuSetup(int32 NumConnections, FString SessionName,  FString MapPath)
 {
+        LevelPathTravelTo = MapPath + "?listen";
         NumPublicConnections = NumConnections;
         TDSSessionName = SessionName;
         AddToViewport();
@@ -86,12 +87,13 @@ void UTDSOnlineSessionMenu::OnMenuCreateSession(bool bSuccess)
                 UWorld *World = GetWorld();
                 if(World)
                 {
-                        (World->ServerTravel(FString("/Game/GFContent/Maps/BasicMap?Listen")));
+                        (World->ServerTravel(FString(LevelPathTravelTo)));
                 }
         }
         else
         {
                 GEngine->AddOnScreenDebugMessage(-1,15.f,FColor::Green,FString::Printf(TEXT("OnMenuCreateSession Failed.")));
+                HostButton->SetIsEnabled(true);
         }
 }
 
@@ -113,6 +115,11 @@ void UTDSOnlineSessionMenu::OnMenuFindSessions(const TArray<FOnlineSessionSearch
                         return;
                 }
         }
+
+        if(!bSuccess || SessionSearchResults.Num() <= 0)
+        {
+                JoinButton->SetIsEnabled(true);
+        }
 }
 
 void UTDSOnlineSessionMenu::OnMenuJoinSession(EOnJoinSessionCompleteResult::Type Result)
@@ -132,6 +139,11 @@ void UTDSOnlineSessionMenu::OnMenuJoinSession(EOnJoinSessionCompleteResult::Type
                         }
                 }
         }
+
+        if(Result != EOnJoinSessionCompleteResult::Success)
+        {
+                JoinButton->SetIsEnabled(true);
+        }
 }
 
 void UTDSOnlineSessionMenu::OnDestorySession(bool bSuccess)
@@ -145,6 +157,7 @@ void UTDSOnlineSessionMenu::OnStartSession(bool bSuccess)
 
 void UTDSOnlineSessionMenu::HostButtonClicked()
 {
+        HostButton->SetIsEnabled(false);
         if(TDSSessionsSubsystem)
         {
                 TDSSessionsSubsystem->CreateSession(NumPublicConnections, TDSSessionName);
@@ -153,6 +166,7 @@ void UTDSOnlineSessionMenu::HostButtonClicked()
 
 void UTDSOnlineSessionMenu::JoinButtonClicked()
 {
+        JoinButton->SetIsEnabled(false);
         if(TDSSessionsSubsystem)
         {
                 TDSSessionsSubsystem->FindSessions(10000);

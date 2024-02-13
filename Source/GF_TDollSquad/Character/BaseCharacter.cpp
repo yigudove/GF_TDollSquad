@@ -11,6 +11,8 @@
 #include "EnhancedInputComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+#include "Kismet/KismetSystemLibrary.h"
+
 #include "OnlineSubsystem.h"
 
 ABaseCharacter::ABaseCharacter()
@@ -122,9 +124,10 @@ void ABaseCharacter::Interact(const FInputActionValue& Value)
 
 void ABaseCharacter::QuitGame(const FInputActionValue& Value)
 {
-	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	if (PlayerController)
-	{
-		PlayerController->ConsoleCommand("quit");
-	}
+	// APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+	// if (PlayerController)
+	// {
+	// 	PlayerController->ConsoleCommand("quit");
+	// }
+	UKismetSystemLibrary::QuitGame(GetWorld(),  GetWorld()->GetFirstPlayerController(), EQuitPreference::Quit, false);
 }

@@ -70,4 +70,23 @@ private:
         DestroySessionCompleteDelegateHandle,
         StartSessionCompleteDelegateHandle;
 #pragma endregion
+
+        bool bCreateSessionOnDestroy { false };
+        
+        struct SessionInfo
+        {
+                SessionInfo()
+                {
+                        NumPublicConnections = NULL;
+                        MatchTypeValue = nullptr;
+                }
+                SessionInfo(int32 Num, FString SessionName)
+                {
+                        NumPublicConnections = Num;
+                        MatchTypeValue = SessionName;
+                }
+                int32 NumPublicConnections;
+                FString MatchTypeValue;
+        };
+        SessionInfo TempSessionInfo;
 };

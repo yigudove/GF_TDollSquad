@@ -15,7 +15,7 @@ class UTDSOnlineSessionMenu : public UUserWidget
 {
 	GENERATED_BODY()
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup(int32 NumConnections = 8, FString SessionName = FString(TEXT("GFSession")));
+	void MenuSetup(int32 NumConnections = 8, FString SessionName = FString(TEXT("GFSession")), FString MapPath = FString(TEXT("/Game/GFContent/Maps/BasicMap")));
 
 protected:
 	virtual bool Initialize() override;
@@ -52,4 +52,5 @@ private:
 	// Session MatchType Value as session name.
 	// Session 键值对中的值，暂时视为房间名
 	FString TDSSessionName {TEXT("GFSession")};
+	FString LevelPathTravelTo{TEXT("/Game/GFContent/Maps/BasicMap?Listen")};
 };

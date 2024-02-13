@@ -27,11 +27,14 @@ bool UTDSSessionsSubsystem::CreateSession(int32 NumPublicConnections, FString Ma
         {
                 return false;
         }
-
-        auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
-        if(ExistingSession)
+        
+        if(auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession))
         {
-                SessionInterface->DestroySession(NAME_GameSession);
+                bCreateSessionOnDestroy = true;
+                TempSessionInfo = SessionInfo(NumPublicConnections, MatchTypeValue);
+                
+                // SessionInterface->DestroySession(NAME_GameSession);
+                DestroySession();
         }
 
         CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
@@ -106,7 +109,18 @@ void UTDSSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult& Sessio
 
 void UTDSSessionsSubsystem::DestroySession()
 {
-        //DestroySessionCompleteDelegateHandle,
+        if(!SessionInterface.IsValid())
+        {
+                TDSOnDestroySessionComplete.Broadcast(false);
+                return;
+        }
+        
+        DestroySessionCompleteDelegateHandle = SessionInterface->AddOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegate);
+        if(! SessionInterface->DestroySession(NAME_GameSession))
+        {
+                SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
+                TDSOnDestroySessionComplete.Broadcast(false);
+        }
 }
 
 void UTDSSessionsSubsystem::StartSession()
@@ -154,6 +168,17 @@ void UTDSSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSess
 
 void UTDSSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bSuccess)
 {
+        if(SessionInterface)
+        {
+                SessionInterface->ClearOnDestroySessionCompleteDelegate_Handle(DestroySessionCompleteDelegateHandle);
+        }
+
+        if(bSuccess && bCreateSessionOnDestroy)
+        {
+                bCreateSessionOnDestroy = false;
+                CreateSession(TempSessionInfo.NumPublicConnections, TempSessionInfo.MatchTypeValue);
+        }
+        TDSOnDestroySessionComplete.Broadcast(bSuccess);
 }
 
 void UTDSSessionsSubsystem::OnStartSessionComplete(FName SessionName, bool bSuccess)
