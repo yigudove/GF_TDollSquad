@@ -13,5 +13,8 @@ UCLASS()
 class GF_TDOLLSQUAD_API AGF_TDollSquadGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
+public:
+        virtual void PostLogin(APlayerController* NewPlayer) override;
+        virtual  void Logout(AController* Exiting) override;
 };
