@@ -40,9 +40,11 @@ bool UTDSSessionsSubsystem::CreateSession(int32 NumPublicConnections, FString Ma
         LastSessionSetting->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL";
         LastSessionSetting->NumPublicConnections = NumPublicConnections;
         LastSessionSetting->bAllowJoinInProgress  = true;
-        LastSessionSetting -> bAllowJoinViaPresence = true;
-        LastSessionSetting -> bShouldAdvertise= true;
-        LastSessionSetting -> bUsesPresence = true;
+        LastSessionSetting->bAllowJoinViaPresence = true;
+        LastSessionSetting->bShouldAdvertise= true;
+        LastSessionSetting->bUsesPresence = true;
+        LastSessionSetting->bUseLobbiesIfAvailable = true;
+        LastSessionSetting->BuildUniqueId = 1;
 
         LastSessionSetting->Set(FName("GFSession_Key"), MatchTypeValue, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
@@ -63,15 +65,43 @@ bool UTDSSessionsSubsystem::CreateSession(int32 NumPublicConnections, FString Ma
 
 void UTDSSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 {
-       // FindSessionsCompleteDelegateHandle,
+        if(!SessionInterface.IsValid())
+        {
+                return;
+        }
+        FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
 
+        LastSessionSearch = MakeShareable((new FOnlineSessionSearch()));
+        LastSessionSearch -> MaxSearchResults = MaxSearchResults;
+        LastSessionSearch -> bIsLanQuery = IOnlineSubsystem::Get() -> GetSubsystemName() == "NULL";
+        LastSessionSearch -> QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 
+        const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+        if(!SessionInterface -> FindSessions(*LocalPlayer -> GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef()))
+        {
+                SessionInterface -> ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
 
+                // Broadcast empty array and false
+                TDSOnFindSessionsComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
+        }
 }
 
 void UTDSSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult& SessionSearchResult)
 {
-        //JoinSessionCompleteDelegateHandle,
+       if(!SessionInterface.IsValid())
+       {
+               TDSOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
+               return;
+       }
+        JoinSessionCompleteDelegateHandle = SessionInterface -> AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+
+        const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+        
+        if(!SessionInterface -> JoinSession(*LocalPlayer -> GetPreferredUniqueNetId(), NAME_GameSession, SessionSearchResult))
+        {
+                SessionInterface -> ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+                TDSOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
+        }
 }
 
 void UTDSSessionsSubsystem::DestroySession()
@@ -98,10 +128,28 @@ void UTDSSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bSuc
 
 void UTDSSessionsSubsystem::OnFindSessionsComplete(bool bSuccess)
 {
+        if(SessionInterface)
+        {
+                SessionInterface -> ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+        }
+
+        // if no valid session found
+        if(LastSessionSearch->SearchResults.Num() <= 0)
+        {
+                TDSOnFindSessionsComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);
+                return;
+        }
+
+        TDSOnFindSessionsComplete.Broadcast(LastSessionSearch->SearchResults, bSuccess);
 }
 
-void UTDSSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+void UTDSSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type JoinResult)
 {
+        if(SessionInterface)
+        {
+                SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+        }
+        TDSOnJoinSessionComplete.Broadcast(JoinResult);
 }
 
 void UTDSSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bSuccess)

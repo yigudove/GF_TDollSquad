@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Interfaces/OnlineSessionInterface.h"
 #include "TDSOnlineSessionMenu.generated.h"
 
 /**
@@ -20,9 +21,16 @@ protected:
 	virtual bool Initialize() override;
 	virtual void NativeDestruct() override;
 
-	// Call TDSSessionsSubsystem delegate
+	// Dynamic bind to TDSOnlineSession->TDSOnCreateSessionComplete
+	// 动态绑定到创建Session委托，用于从菜单移动到关卡
 	UFUNCTION()
 	void OnMenuCreateSession(bool bSuccess);
+	void OnMenuFindSessions(const TArray<FOnlineSessionSearchResult>& SessionSearchResults, bool bSuccess);
+	void OnMenuJoinSession(EOnJoinSessionCompleteResult::Type Result);
+	UFUNCTION()
+	void OnDestorySession(bool bSuccess);
+	UFUNCTION()
+	void OnStartSession(bool bSuccess);
 	
 private:
 	UPROPERTY(meta = (BindWidget))
@@ -41,6 +49,7 @@ private:
 	class UTDSSessionsSubsystem * TDSSessionsSubsystem;
 
 	int32 NumPublicConnections {8};
-	// Session Name
-	FString MatchTypeValue {TEXT("GFSession")};
+	// Session MatchType Value as session name.
+	// Session 键值对中的值，暂时视为房间名
+	FString TDSSessionName {TEXT("GFSession")};
 };

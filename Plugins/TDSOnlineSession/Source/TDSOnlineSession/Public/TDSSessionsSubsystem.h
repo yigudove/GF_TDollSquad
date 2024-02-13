@@ -11,6 +11,10 @@
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTDSOnCreateSessionComplete, bool, bSuccess);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FTDSOnFindSessionsComplete, const TArray<FOnlineSessionSearchResult>& SessionSearchResult, bool bSuccess);
+DECLARE_MULTICAST_DELEGATE_OneParam(FTDSOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTDSOnDestroySessionComplete, bool, bSuccess);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTDSOnStartSessionComplete, bool, bSuccess);
 
 /**
  * 
@@ -33,19 +37,24 @@ public:
 
         // Delegate for the menu to bind callback
         FTDSOnCreateSessionComplete TDSOnCreateSessionComplete;
+        FTDSOnFindSessionsComplete TDSOnFindSessionsComplete;
+        FTDSOnJoinSessionComplete TDSOnJoinSessionComplete;
+        FTDSOnDestroySessionComplete TDSOnDestroySessionComplete;
+        FTDSOnStartSessionComplete TDSOnStartSessionComplete;
 #pragma endregion
         
 protected:
 #pragma region Session Callback Func
         void OnCreateSessionComplete(FName SessionName, bool bSuccess);
         void OnFindSessionsComplete(bool bSuccess);
-        void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+        void OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type JoinResult);
         void OnDestroySessionComplete(FName SessionName, bool bSuccess);
         void OnStartSessionComplete(FName SessionName, bool bSuccess);
 #pragma  endregion
 private:
         IOnlineSessionPtr SessionInterface;
         TSharedPtr<FOnlineSessionSettings> LastSessionSetting;
+        TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 
 #pragma region Callback Delegate
         FOnCreateSessionCompleteDelegate CreateSessionCompleteDelegate;

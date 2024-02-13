@@ -3,13 +3,16 @@
 
 #include "TDSOnlineSessionMenu.h"
 #include "TDSSessionsSubsystem.h"
+#include "OnlineSessionSettings.h"
+#include "OnlineSubsystem.h"
+
 #include "Components/Button.h"
 
 
 void UTDSOnlineSessionMenu::MenuSetup(int32 NumConnections, FString SessionName)
 {
         NumPublicConnections = NumConnections;
-        MatchTypeValue = SessionName;
+        TDSSessionName = SessionName;
         AddToViewport();
         SetVisibility(ESlateVisibility::Visible);
         bIsFocusable = true;
@@ -17,6 +20,7 @@ void UTDSOnlineSessionMenu::MenuSetup(int32 NumConnections, FString SessionName)
         UWorld *World = GetWorld();
         if(World)
         {
+                // 菜单输入模式
                 APlayerController *PlayerController = World->GetFirstPlayerController();
                 if(PlayerController)
                 {
@@ -37,7 +41,12 @@ void UTDSOnlineSessionMenu::MenuSetup(int32 NumConnections, FString SessionName)
 
         if(TDSSessionsSubsystem)
         {
+                // Bind Delegate
                 TDSSessionsSubsystem->TDSOnCreateSessionComplete.AddDynamic(this, &ThisClass::UTDSOnlineSessionMenu::OnMenuCreateSession);
+                TDSSessionsSubsystem->TDSOnFindSessionsComplete.AddUObject(this, &ThisClass::OnMenuFindSessions);
+                TDSSessionsSubsystem->TDSOnJoinSessionComplete.AddUObject(this, &ThisClass::OnMenuJoinSession);
+                TDSSessionsSubsystem->TDSOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestorySession);
+                TDSSessionsSubsystem->TDSOnStartSessionComplete.AddDynamic(this, &ThisClass::OnStartSession);
         }
 }
 
@@ -62,10 +71,12 @@ bool UTDSOnlineSessionMenu::Initialize()
 
 void UTDSOnlineSessionMenu::NativeDestruct()
 {
+        // 从菜单到关卡中，进行一些切换
         MenuTearDown();
         Super::NativeDestruct();
 }
 
+#pragma region SessionDelegate
 void UTDSOnlineSessionMenu::OnMenuCreateSession(bool bSuccess)
 {
         if(bSuccess)
@@ -84,17 +95,68 @@ void UTDSOnlineSessionMenu::OnMenuCreateSession(bool bSuccess)
         }
 }
 
+void UTDSOnlineSessionMenu::OnMenuFindSessions(const TArray<FOnlineSessionSearchResult>& SessionSearchResults,
+        bool bSuccess)
+{
+        if(TDSSessionsSubsystem == nullptr)
+        {
+                return;
+        }
+        
+        for( auto Result  : SessionSearchResults)
+        {
+                FString SettingsValue;
+                Result.Session.SessionSettings.Get(FName("GFSession_Key"), SettingsValue);
+                if(SettingsValue == TDSSessionName)
+                {
+                        TDSSessionsSubsystem -> JoinSession(Result);
+                        return;
+                }
+        }
+}
+
+void UTDSOnlineSessionMenu::OnMenuJoinSession(EOnJoinSessionCompleteResult::Type Result)
+{
+        IOnlineSubsystem *Subsystem = IOnlineSubsystem::Get();
+        if(Subsystem)
+        {
+                IOnlineSessionPtr SessionInterface = Subsystem ->GetSessionInterface();
+                if(SessionInterface.IsValid())
+                {
+                        FString Address;
+                        SessionInterface -> GetResolvedConnectString(NAME_GameSession, Address);
+
+                        if(APlayerController *PC = GetGameInstance()->GetFirstLocalPlayerController())
+                        {
+                                PC->ClientTravel(Address, TRAVEL_Absolute);
+                        }
+                }
+        }
+}
+
+void UTDSOnlineSessionMenu::OnDestorySession(bool bSuccess)
+{
+}
+
+void UTDSOnlineSessionMenu::OnStartSession(bool bSuccess)
+{
+}
+#pragma endregion
+
 void UTDSOnlineSessionMenu::HostButtonClicked()
 {
         if(TDSSessionsSubsystem)
         {
-                TDSSessionsSubsystem->CreateSession(NumPublicConnections, MatchTypeValue);
+                TDSSessionsSubsystem->CreateSession(NumPublicConnections, TDSSessionName);
         }
 }
 
 void UTDSOnlineSessionMenu::JoinButtonClicked()
 {
-        
+        if(TDSSessionsSubsystem)
+        {
+                TDSSessionsSubsystem->FindSessions(10000);
+        }
 }
 
 void UTDSOnlineSessionMenu::MenuTearDown()
@@ -103,6 +165,7 @@ void UTDSOnlineSessionMenu::MenuTearDown()
         UWorld* World = GetWorld();
         if(World)
         {
+                // 非菜单输入模式
                 APlayerController *PC = World -> GetFirstPlayerController();
                 if(PC)
                 {
