@@ -14,6 +14,7 @@ public class GF_TDollSquad : ModuleRules
 			"CoreUObject", 
 			"Engine",
 			"InputCore",
+			"UMG",
 			"EnhancedInput",
 			"OnlineSubsystem",
 			"OnlineSubsystemSteam",
