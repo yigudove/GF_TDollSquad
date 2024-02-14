@@ -5,6 +5,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "Interfaces/OnlineSessionInterface.h"
+#include "Components/WidgetComponent.h"
 
 
 #include "BaseCharacter.generated.h"
@@ -44,4 +45,8 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
 	void QuitGame(const FInputActionValue& Value);
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = HUD)
+	UWidgetComponent *OverheadInfo;
 };

@@ -12,8 +12,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "Kismet/KismetSystemLibrary.h"
+#include "..\HUD\OverheadWidget.h"
 
 #include "OnlineSubsystem.h"
+#include "Components/WidgetComponent.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -29,7 +31,11 @@ ABaseCharacter::ABaseCharacter()
 	CharacterCamera->bUsePawnControlRotation = false;
 
 	bUseControllerRotationYaw = false;
-	GetCharacterMovement()->bOrientRotationToMovement = true;	
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+
+	OverheadInfo = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
+	OverheadInfo->SetupAttachment(GetMesh());
+	OverheadInfo->SetupAttachment(RootComponent); 
 }
 
 void ABaseCharacter::BeginPlay()
