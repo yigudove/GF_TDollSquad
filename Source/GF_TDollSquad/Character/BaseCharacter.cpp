@@ -12,15 +12,17 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "Kismet/KismetSystemLibrary.h"
-#include "..\HUD\OverheadWidget.h"
+#include "GF_TDollSquad/HUD/OverheadWidget.h"
 
 #include "OnlineSubsystem.h"
 #include "Components/WidgetComponent.h"
+#include "Net/UnrealNetwork.h"
 
 ABaseCharacter::ABaseCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
+	bReplicates = true;
+	
 	CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CharacterCameraSpringArm"));
 	CameraSpringArm->SetupAttachment(GetMesh());
 	CameraSpringArm->TargetArmLength = 300.0f;
@@ -55,6 +57,16 @@ void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	for(ABaseItem *Item : OverlappingItems)
+	{
+		Item->SetDropInfoWidgetVisibility(true);
+	}
+}
+
+void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -68,6 +80,8 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		PEI->BindAction(QuitGameAction, ETriggerEvent::Started, this, &ABaseCharacter::QuitGame);
 	}
 }
+
+
 
 void ABaseCharacter::Move(const FInputActionValue& Value)
 {
