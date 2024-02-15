@@ -56,17 +56,24 @@ void ABaseCharacter::BeginPlay()
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	for(ABaseItem *Item : OverlappingItems)
-	{
-		Item->SetDropInfoWidgetVisibility(true);
-	}
+	//
+	// for(ABaseItem *Item : OverlappingItems)
+	// {
+	// 	Item->SetDropInfoWidgetVisibility(true);
+	// }
+	// GEngine->AddOnScreenDebugMessage(1, 15.0f, FColor::Yellow, FString::Printf(TEXT("Overlap Num: %d"), OverlappingItems.Num()));
 }
 
 void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
+
+	// DOREPLIFETIME(ABaseCharacter, LastOverlapItem);
+	// DOREPLIFETIME_CONDITION(ABaseCharacter, LastOverlapItem, COND_OwnerOnly, );
+	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingItems, COND_OwnerOnly);
+	// DOREPLIFETIME_CONDITION_NOTIFY(ABaseCharacter, OverlappingItems, COND_OwnerOnly, REPNOTIFY_Always);
+
+	// DOREPLIFETIME(ABaseCharacter, OverlappingItems);
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -150,4 +157,50 @@ void ABaseCharacter::QuitGame(const FInputActionValue& Value)
 	// 	PlayerController->ConsoleCommand("quit");
 	// }
 	UKismetSystemLibrary::QuitGame(GetWorld(),  GetWorld()->GetFirstPlayerController(), EQuitPreference::Quit, false);
+}
+
+void ABaseCharacter::OnRep_ClientOverlappingItem()
+{
+	FString str = RemovedOverlappingItem == nullptr ? FString("NULL ITEM") : RemovedOverlappingItem->GetName();
+	UE_LOG(LogTemp, Log, TEXT("OnRep_ClientOverlappingItem Trigger, Item Num: %d, RemovedOverlappingItem: %s"), OverlappingItems.Num(), *str);
+	for(ABaseItem *Item : OverlappingItems)
+	{
+		Item->SetDropInfoWidgetVisibility(true);
+	}
+}
+
+void ABaseCharacter::OnRep_ClientRemoveOverlappingItem(ABaseItem* RemovedItem)
+{
+	FString str = RemovedOverlappingItem == nullptr ? FString("NULL ITEM") : RemovedOverlappingItem->GetName();
+	UE_LOG(LogTemp, Log, TEXT("OnRep_ClientRemoveOverlappingItem Trigger, Item Num: %d, RemovedOverlappingItem: %s"), OverlappingItems.Num(), *str);
+}
+
+void ABaseCharacter::SetRemovedOverlappingItem(ABaseItem* Item)
+{
+	RemovedOverlappingItem = Item;
+}
+
+
+void ABaseCharacter::AddOverlappingItem(ABaseItem* OverlappingItem)
+{
+	OverlappingItems.Emplace(OverlappingItem);
+	if(IsLocallyControlled())
+	{
+		if(OverlappingItem)
+		{
+			OverlappingItem->SetDropInfoWidgetVisibility(true);
+		}
+	}
+}
+
+void ABaseCharacter::RemoveOverlappingItem(ABaseItem* OverlappingItem)
+{
+	// OverlappingItems.Remove(OverlappingItem);
+	if(IsLocallyControlled())
+	{
+		if(OverlappingItem)
+		{
+			OverlappingItem->SetDropInfoWidgetVisibility(false);
+		}
+	}
 }

@@ -11,6 +11,7 @@ ABaseItem::ABaseItem()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
+	bReplicates = true;
 
 	ItemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ItemMesh"));
 	SetRootComponent(ItemMesh);
@@ -44,14 +45,17 @@ void ABaseItem::BeginPlay()
 	SetDropInfoWidgetVisibility(false);
 }
 
-void ABaseItem::Tick(float DeltaTime)
+void ABaseItem::SetDropInfoWidgetVisibility(bool bVisible)
 {
-	Super::Tick(DeltaTime);
+	if(ItemDropInfoWidget)
+	{
+		ItemDropInfoWidget->SetVisibility(bVisible);
+	}
 
 }
 
 void ABaseItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Sweep)
+								UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Sweep)
 {
 	ABaseCharacter *BaseCharacter = Cast<ABaseCharacter>(OtherActor);
 	if(BaseCharacter)
@@ -66,8 +70,8 @@ void ABaseItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 	ABaseCharacter *BaseCharacter = Cast<ABaseCharacter>(OtherActor);
 	if(BaseCharacter)
 	{
+		BaseCharacter->SetRemovedOverlappingItem(this);
 		BaseCharacter->RemoveOverlappingItem(this);
-		SetDropInfoWidgetVisibility(false);
 	}
 }
 

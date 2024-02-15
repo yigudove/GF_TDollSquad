@@ -18,12 +18,13 @@ class GF_TDOLLSQUAD_API ABaseCharacter : public ACharacter
 
 public:
 	ABaseCharacter();
-
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+	
 protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const override;
+
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent *CameraSpringArm;
@@ -53,10 +54,25 @@ public:
 	UWidgetComponent *OverheadInfo;
 
 private:
-	UPROPERTY(VisibleAnywhere, Category = "Inventory", Replicated)
+	// UPROPERTY(VisibleAnywhere, Category = "Inventory", Replicated)
+	UPROPERTY(EditAnywhere, Category = "Inventory", Replicated, ReplicatedUsing = OnRep_ClientOverlappingItem)
 	TArray<ABaseItem*> OverlappingItems;
+public:
+	UPROPERTY(EditAnywhere, Replicated, ReplicatedUsing = OnRep_ClientRemoveOverlappingItem)
+	ABaseItem *RemovedOverlappingItem;
+
+	// UPROPERTY(ReplicatedUsing = OnRep_OverlappingItem)
+	// ABaseItem *LastOverlapItem;
+private:
+	UFUNCTION()
+	void OnRep_ClientOverlappingItem();
+	UFUNCTION()
+	void OnRep_ClientRemoveOverlappingItem(ABaseItem *RemovedItem);
 
 public:
-	FORCEINLINE void AddOverlappingItem(ABaseItem *OverlappingItem) { OverlappingItems.Emplace(OverlappingItem); }
-	FORCEINLINE void RemoveOverlappingItem(ABaseItem *OverlappingItem) { OverlappingItems.Remove(OverlappingItem); }
+	// FORCEINLINE void SetLastOverlapItem(ABaseItem *OverlapItem) { LastOverlapItem = OverlapItem; }
+	void SetRemovedOverlappingItem(ABaseItem* Item);
+	void AddOverlappingItem(ABaseItem *OverlappingItem);
+	void RemoveOverlappingItem(ABaseItem *OverlappingItem);
+	
 };

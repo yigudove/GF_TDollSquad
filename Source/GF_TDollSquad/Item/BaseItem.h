@@ -7,16 +7,16 @@
 #include "Components/WidgetComponent.h"
 #include "BaseItem.generated.h"
 
-UENUM(BlueprintType)
-enum class EItemState : uint8
-{
-	EIS_Null UMETA(DisplayName = "Null State"),
-	EIS_Drop UMETA(DisplayName = "Drop State"),
-	EIS_Picking UMETA(DisplayName = "Picking State"),
-	EIS_Inventory UMETA(DisplayName = "Inventory State"),
-	
-	EIS_MAX UMETA(DisplayName = "MAX")
-};
+// UENUM(BlueprintType)
+// enum class EItemState : uint8
+// {
+// 	EIS_Null UMETA(DisplayName = "Null State"),
+// 	EIS_Drop UMETA(DisplayName = "Drop State"),
+// 	EIS_Picking UMETA(DisplayName = "Picking State"),
+// 	EIS_Inventory UMETA(DisplayName = "Inventory State"),
+// 	
+// 	EIS_MAX UMETA(DisplayName = "MAX")
+// };
 
 UCLASS()
 class GF_TDOLLSQUAD_API ABaseItem : public AActor
@@ -50,8 +50,7 @@ protected:
 	);
 
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	// virtual void Tick(float DeltaTime) override;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
@@ -60,12 +59,13 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USphereComponent *AreaSphere;
 
-	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	EItemState WeaponState;
+	// UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
+	// EItemState WeaponState;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	UWidgetComponent *ItemDropInfoWidget;
 public:
-	FORCEINLINE void SetDropInfoWidgetVisibility(bool bVisible) { ItemDropInfoWidget->SetVisibility(bVisible); }
+	UFUNCTION()
+	void SetDropInfoWidgetVisibility(bool bVisible);
 
 };
