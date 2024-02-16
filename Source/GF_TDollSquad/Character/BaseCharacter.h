@@ -11,6 +11,8 @@
 
 #include "BaseCharacter.generated.h"
 
+class ABaseWeapon;
+
 UCLASS()
 class GF_TDOLLSQUAD_API ABaseCharacter : public ACharacter
 {
@@ -24,7 +26,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
+	virtual void PostInitializeComponents() override;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent *CameraSpringArm;
@@ -57,10 +59,14 @@ private:
 	// UPROPERTY(VisibleAnywhere, Category = "Inventory", Replicated)
 	UPROPERTY(EditAnywhere, Category = "Inventory", Replicated, ReplicatedUsing = OnRep_ClientOverlappingItem)
 	TArray<ABaseItem*> OverlappingItems;
-public:
 	UPROPERTY(EditAnywhere, Replicated, ReplicatedUsing = OnRep_ClientRemoveOverlappingItem)
 	ABaseItem *RemovedOverlappingItem;
+	UPROPERTY(VisibleAnywhere, Category = "Inventory")
+	ABaseItem *LastTraceItem;
 
+public:
+	void SetLastTraceItem(ABaseItem *TraceItem);
+	
 	// UPROPERTY(ReplicatedUsing = OnRep_OverlappingItem)
 	// ABaseItem *LastOverlapItem;
 private:
@@ -74,5 +80,10 @@ public:
 	void SetRemovedOverlappingItem(ABaseItem* Item);
 	void AddOverlappingItem(ABaseItem *OverlappingItem);
 	void RemoveOverlappingItem(ABaseItem *OverlappingItem);
-	
+
+private:
+	UPROPERTY(VisibleAnywhere)
+	class UCombatComponent *CharacterCombatComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<ABaseItem> DefaultItemBP;
 };

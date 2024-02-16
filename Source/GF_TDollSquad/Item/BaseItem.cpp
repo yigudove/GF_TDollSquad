@@ -15,8 +15,15 @@ ABaseItem::ABaseItem()
 
 	ItemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ItemMesh"));
 	SetRootComponent(ItemMesh);
-	ItemMesh->SetCollisionResponseToAllChannels(ECR_Block);
-	ItemMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	// ItemMesh->SetCollisionResponseToAllChannels(ECR_Block);
+	// ItemMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	// ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// ItemMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
+	ItemMesh->SetSimulatePhysics(false);
+	ItemMesh->SetEnableGravity(false);
+	ItemMesh->SetVisibility(true);
+	ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("ItemAreaSphere"));

@@ -1,6 +1,7 @@
 #include "BaseCharacter.h"
 
 #include  "OnlineSessionSettings.h"
+#include "GF_TDollSquad/Item/BaseWeapon.h"
 
 #include "Framework/Application/SlateApplication.h"
 #include "GameFramework/GameUserSettings.h"
@@ -15,13 +16,17 @@
 #include "GF_TDollSquad/HUD/OverheadWidget.h"
 
 #include "OnlineSubsystem.h"
+#include "CharacterComponent/CombatComponent.h"
 #include "Components/WidgetComponent.h"
+#include "GF_TDollSquad/Item/BaseWeapon.h"
 #include "Net/UnrealNetwork.h"
 
 ABaseCharacter::ABaseCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
+
+	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	
 	CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CharacterCameraSpringArm"));
 	CameraSpringArm->SetupAttachment(GetMesh());
@@ -37,7 +42,13 @@ ABaseCharacter::ABaseCharacter()
 
 	OverheadInfo = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 	OverheadInfo->SetupAttachment(GetMesh());
-	OverheadInfo->SetupAttachment(RootComponent); 
+	OverheadInfo->SetupAttachment(RootComponent);
+
+	CharacterCombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	CharacterCombatComponent->SetIsReplicated(true);
+
+	// ABaseWeapon *SpawnWeapon = GetWorld()->SpawnActor<ABaseWeapon>(DefaultItemBP);
+	// CharacterCombatComponent->EquipWeapon(SpawnWeapon);
 }
 
 void ABaseCharacter::BeginPlay()
@@ -88,6 +99,15 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	}
 }
 
+void ABaseCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if(CharacterCombatComponent)
+	{
+		CharacterCombatComponent->Character = this;
+	}
+}
 
 
 void ABaseCharacter::Move(const FInputActionValue& Value)
@@ -131,32 +151,24 @@ void ABaseCharacter::Interact(const FInputActionValue& Value)
 {
 	UE_LOG(LogTemp, Log, TEXT("Trigger Interact Action."));
 
-	// UGameUserSettings* MyGameSettings = GEngine->GetGameUserSettings();
-	// // MyGameSettings->SetFullscreenMode(EWindowMode::Fullscreen);
-	// MyGameSettings->SetFullscreenMode(EWindowMode::Windowed);
-	// MyGameSettings->ApplySettings(true);
-	if(GEngine->GetGameUserSettings()->GetFullscreenMode()==EWindowMode::Fullscreen)
+	if(CharacterCombatComponent && HasAuthority())
 	{
-		GEngine->GetGameUserSettings()->SetFullscreenMode(EWindowMode::Windowed);
-		GEngine->GetGameUserSettings()->SetScreenResolution(FIntPoint(1800, 1000));
-		GEngine->GetGameUserSettings()->ApplySettings(true);
-	}
-	else
-	{
-		GEngine->GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
-		GEngine->GetGameUserSettings()->ApplySettings(true);
+		if(ABaseWeapon *DropWeapon = Cast<ABaseWeapon>(LastTraceItem))
+		{
+			CharacterCombatComponent->EquipWeapon(DropWeapon);
+		}
 	}
 
 }
 
 void ABaseCharacter::QuitGame(const FInputActionValue& Value)
 {
-	// APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
-	// if (PlayerController)
-	// {
-	// 	PlayerController->ConsoleCommand("quit");
-	// }
 	UKismetSystemLibrary::QuitGame(GetWorld(),  GetWorld()->GetFirstPlayerController(), EQuitPreference::Quit, false);
+}
+
+void ABaseCharacter::SetLastTraceItem(ABaseItem* TraceItem)
+{
+	LastTraceItem = TraceItem;
 }
 
 void ABaseCharacter::OnRep_ClientOverlappingItem()
