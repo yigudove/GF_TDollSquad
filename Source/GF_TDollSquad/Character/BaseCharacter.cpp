@@ -70,10 +70,10 @@ void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 
 	// DOREPLIFETIME(ABaseCharacter, LastOverlapItem);
 	// DOREPLIFETIME_CONDITION(ABaseCharacter, LastOverlapItem, COND_OwnerOnly, );
-	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingItems, COND_OwnerOnly);
-	// DOREPLIFETIME_CONDITION_NOTIFY(ABaseCharacter, OverlappingItems, COND_OwnerOnly, REPNOTIFY_Always);
+	// DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingItems, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION_NOTIFY(ABaseCharacter, OverlappingItems, COND_OwnerOnly, REPNOTIFY_Always);
 
-	// DOREPLIFETIME(ABaseCharacter, OverlappingItems);
+	DOREPLIFETIME(ABaseCharacter, RemovedOverlappingItem);
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -161,8 +161,6 @@ void ABaseCharacter::QuitGame(const FInputActionValue& Value)
 
 void ABaseCharacter::OnRep_ClientOverlappingItem()
 {
-	FString str = RemovedOverlappingItem == nullptr ? FString("NULL ITEM") : RemovedOverlappingItem->GetName();
-	UE_LOG(LogTemp, Log, TEXT("OnRep_ClientOverlappingItem Trigger, Item Num: %d, RemovedOverlappingItem: %s"), OverlappingItems.Num(), *str);
 	for(ABaseItem *Item : OverlappingItems)
 	{
 		Item->SetDropInfoWidgetVisibility(true);
@@ -171,8 +169,12 @@ void ABaseCharacter::OnRep_ClientOverlappingItem()
 
 void ABaseCharacter::OnRep_ClientRemoveOverlappingItem(ABaseItem* RemovedItem)
 {
-	FString str = RemovedOverlappingItem == nullptr ? FString("NULL ITEM") : RemovedOverlappingItem->GetName();
-	UE_LOG(LogTemp, Log, TEXT("OnRep_ClientRemoveOverlappingItem Trigger, Item Num: %d, RemovedOverlappingItem: %s"), OverlappingItems.Num(), *str);
+	// FString str = RemovedOverlappingItem == nullptr ? FString("NULL ITEM") : RemovedOverlappingItem->GetName();
+	// UE_LOG(LogTemp, Log, TEXT("OnRep_ClientRemoveOverlappingItem Trigger, Item Num: %d, RemovedOverlappingItem: %s"), OverlappingItems.Num(), *str);
+	if(RemovedOverlappingItem)
+	{
+		RemovedOverlappingItem->SetDropInfoWidgetVisibility(false);
+	}
 }
 
 void ABaseCharacter::SetRemovedOverlappingItem(ABaseItem* Item)
@@ -195,7 +197,7 @@ void ABaseCharacter::AddOverlappingItem(ABaseItem* OverlappingItem)
 
 void ABaseCharacter::RemoveOverlappingItem(ABaseItem* OverlappingItem)
 {
-	// OverlappingItems.Remove(OverlappingItem);
+	OverlappingItems.Remove(OverlappingItem);
 	if(IsLocallyControlled())
 	{
 		if(OverlappingItem)
