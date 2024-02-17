@@ -14,6 +14,7 @@ enum class EItemState : uint8
 	EIS_Drop UMETA(DisplayName = "Drop State"),
 	EIS_Picking UMETA(DisplayName = "Picking State"),
 	EIS_Inventory UMETA(DisplayName = "Inventory State"),
+	EIS_Equipped UMETA(DisplayName = "Equipped State"),
 	
 	EIS_MAX UMETA(DisplayName = "MAX")
 };
@@ -60,13 +61,21 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USphereComponent *AreaSphere;
 
-	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties", Replicated)
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties", ReplicatedUsing = OnRep_SwitchItemState)
 	EItemState ItemState;
+
+	UFUNCTION()
+	void OnRep_SwitchItemState();
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	UWidgetComponent *ItemDropInfoWidget;
 public:
+
+	FORCEINLINE USkeletalMeshComponent* GetItemMesh() { return ItemMesh; }
+	FORCEINLINE USphereComponent * GetAreaSphere() { return AreaSphere; }
+
+	
 	UFUNCTION()
 	void SetDropInfoWidgetVisibility(bool bVisible);
-	FORCEINLINE void SetItemState(EItemState State) { ItemState = State; }
+	void SetItemState(EItemState State);
 };

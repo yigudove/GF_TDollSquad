@@ -60,6 +60,8 @@ void ABaseItem::BeginPlay()
 	SetDropInfoWidgetVisibility(false);
 }
 
+
+
 void ABaseItem::SetDropInfoWidgetVisibility(bool bVisible)
 {
 	if(ItemDropInfoWidget)
@@ -69,25 +71,73 @@ void ABaseItem::SetDropInfoWidgetVisibility(bool bVisible)
 
 }
 
+void ABaseItem::SetItemState(EItemState State)
+{
+
+	// 	EIS_Null UMETA(DisplayName = "Null State"),
+	// 	EIS_Drop UMETA(DisplayName = "Drop State"),
+	// 	EIS_Picking UMETA(DisplayName = "Picking State"),
+	// 	EIS_Inventory UMETA(DisplayName = "Inventory State"),
+	// 	EIS_Equipped UMETA(DisplayName = "Equipped State"),
+	//
+	// 	EIS_MAX UMETA(DisplayName = "MAX")
+	
+	ItemState = State;
+	switch (ItemState)
+	{
+	case EItemState::EIS_Equipped:
+		SetDropInfoWidgetVisibility(false);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	case EItemState::EIS_Drop:
+		SetDropInfoWidgetVisibility(true);
+		// AreaSphere->SetCollisionEnabled(ECollisionEnabled::);
+		break;
+	}
+}
+
+void ABaseItem::OnRep_SwitchItemState()
+{
+	switch (ItemState)
+	{
+	case EItemState::EIS_Equipped:
+		SetDropInfoWidgetVisibility(false);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
+	case EItemState::EIS_Drop:
+		SetDropInfoWidgetVisibility(true);
+		// AreaSphere->SetCollisionEnabled(ECollisionEnabled::);
+		break;
+	}
+}
+
 void ABaseItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 								UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Sweep)
 {
-	ABaseCharacter *BaseCharacter = Cast<ABaseCharacter>(OtherActor);
-	if(BaseCharacter)
+	if(ItemState == EItemState::EIS_Drop)
 	{
-		BaseCharacter->AddOverlappingItem(this);
+		ABaseCharacter *BaseCharacter = Cast<ABaseCharacter>(OtherActor);
+		if(BaseCharacter)
+		{
+			BaseCharacter->AddOverlappingItem(this);
+		}
 	}
+
 }
 
 void ABaseItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	ABaseCharacter *BaseCharacter = Cast<ABaseCharacter>(OtherActor);
-	if(BaseCharacter)
+	if(ItemState == EItemState::EIS_Drop)
 	{
-		BaseCharacter->SetRemovedOverlappingItem(this);
-		BaseCharacter->RemoveOverlappingItem(this);
+		ABaseCharacter *BaseCharacter = Cast<ABaseCharacter>(OtherActor);
+        if(BaseCharacter)
+        {
+        	BaseCharacter->SetRemovedOverlappingItem(this);
+        	BaseCharacter->RemoveOverlappingItem(this);
+        }
 	}
+
 }
 
 

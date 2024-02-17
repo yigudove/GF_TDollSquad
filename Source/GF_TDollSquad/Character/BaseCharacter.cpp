@@ -1,7 +1,7 @@
 #include "BaseCharacter.h"
 
 #include  "OnlineSessionSettings.h"
-#include "GF_TDollSquad/Item/BaseWeapon.h"
+#include "GF_TDollSquad/Item/Weapon/BaseWeapon.h"
 
 #include "Framework/Application/SlateApplication.h"
 #include "GameFramework/GameUserSettings.h"
@@ -19,7 +19,6 @@
 #include "OnlineSubsystem.h"
 #include "CharacterComponent/CombatComponent.h"
 #include "Components/WidgetComponent.h"
-#include "GF_TDollSquad/Item/BaseWeapon.h"
 #include "Net/UnrealNetwork.h"
 
 ABaseCharacter::ABaseCharacter()
@@ -81,9 +80,6 @@ void ABaseCharacter::Tick(float DeltaTime)
 		{
 			FString CharacterName = GetName();
 			FVector CameraLocation = CameraManager->GetCameraLocation();
-
-			// 输出角色名称和相机位置到日志
-			UE_LOG(LogTemp, Warning, TEXT("Character Name: %s, Camera Location: %s"), *CharacterName, *CameraLocation.ToString());
 			DrawDebugSphere(GetWorld(), CameraLocation, 24.0f, 12, FColor::Red);
 		}
 	}
@@ -115,6 +111,10 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		PEI->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABaseCharacter::Look);
 		PEI->BindAction(InteractAction, ETriggerEvent::Started, this, &ABaseCharacter::Interact);
 		PEI->BindAction(QuitGameAction, ETriggerEvent::Started, this, &ABaseCharacter::QuitGame);
+		
+		PEI->BindAction(FireAction, ETriggerEvent::Started, this, &ABaseCharacter::FirePressed);
+		PEI->BindAction(FireAction, ETriggerEvent::Ongoing, this, &ABaseCharacter::FireOngoing);
+		PEI->BindAction(FireAction, ETriggerEvent::Completed, this, &ABaseCharacter::FireReleased);
 	}
 }
 
@@ -168,41 +168,59 @@ void ABaseCharacter::Look(const FInputActionValue& Value)
 
 void ABaseCharacter::Interact(const FInputActionValue& Value)
 {
+	EquipWeapon(LastTraceItem);
+
+}
+
+void ABaseCharacter::FirePressed(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Log, TEXT("FirePressed"));
+	if(CharacterCombatComponent)
+	{
+		UE_LOG(LogTemp, Log, TEXT("CharacterCombatComponent Exist"));
+		CharacterCombatComponent->FireTrigger(true);
+	}
+}
+
+void ABaseCharacter::FireOngoing(const FInputActionValue& Value)
+{
+}
+
+void ABaseCharacter::FireReleased(const FInputActionValue& Value)
+{
+	UE_LOG(LogTemp, Log, TEXT("FireReleased"));
+	if(CharacterCombatComponent)
+	{
+		CharacterCombatComponent->FireTrigger(false);
+	}
+}
+
+void ABaseCharacter::EquipWeapon(ABaseItem* WeaponToEquip)
+{
 	if(CharacterCombatComponent)
 	{
 		if(HasAuthority()) // on server
 		{
-			UE_LOG(LogTemp, Log, TEXT("CharacterCombatComponent 1."));
 			if(ABaseWeapon *DropWeapon = Cast<ABaseWeapon>(LastTraceItem))
-            {
-            	CharacterCombatComponent->EquipWeapon(DropWeapon);
-            }
+			{
+				CharacterCombatComponent->EquipItem(DropWeapon);
+			}
 		}
 		else // on client
 		{
-			UE_LOG(LogTemp, Log, TEXT("CharacterCombatComponent 2."));
 			ServerEquipWeapon();
 		}
 	}
-
 }
 
 void ABaseCharacter::ServerEquipWeapon_Implementation()
 {
-	UE_LOG(LogTemp, Log, TEXT("CharacterCombatComponent 3."));
 	if(CharacterCombatComponent)
 	{
-		UE_LOG(LogTemp, Log, TEXT("CharacterCombatComponent 4."));
-		ABaseWeapon *DropWeapon = Cast<ABaseWeapon>(LastTraceItem);
-		if(LastTraceItem)
+		if(ABaseWeapon *DropWeapon = Cast<ABaseWeapon>(LastTraceItem))
 	    {
-	            UE_LOG(LogTemp, Log, TEXT("LastTraceItem not nullptr."));
-	            CharacterCombatComponent->EquipWeapon(DropWeapon);
+	            CharacterCombatComponent->EquipItem(DropWeapon);
 	    }
-		else if(LastTraceItem == nullptr)
-		{
-			UE_LOG(LogTemp, Log, TEXT("LastTraceItem nullptr."));
-		}
 	}
 }
 
@@ -263,5 +281,22 @@ void ABaseCharacter::RemoveOverlappingItem(ABaseItem* OverlappingItem)
 		{
 			OverlappingItem->SetDropInfoWidgetVisibility(false);
 		}
+	}
+}
+
+void ABaseCharacter::PlayFireMontage(bool bAiming)
+{
+	if(CharacterCombatComponent == nullptr || CharacterCombatComponent->EquippedItem == nullptr) return;
+
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && FireWeaponMontage)
+	{
+		UE_LOG(LogTemp, Log, TEXT("AnimInstance && FireWeaponMontage"));
+		AnimInstance->Montage_Play(FireWeaponMontage);
+		FName SectionName;
+		// SectionName = bAiming ? FName("AimingFire") : FName("HipFire");
+		SectionName = FName("HipFire");
+		AnimInstance->Montage_JumpToSection(SectionName);
+		
 	}
 }

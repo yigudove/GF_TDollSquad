@@ -44,11 +44,21 @@ protected:
 	class UInputAction *InteractAction;
 	UPROPERTY(EditAnywhere, Category = Input)
 	class UInputAction *QuitGameAction;
+	UPROPERTY(EditAnywhere, Category = Input)
+	UInputAction *FireAction;
 #pragma  endregion
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
+
+	void FirePressed(const FInputActionValue& Value);
+	void FireOngoing(const FInputActionValue& Value);
+	void FireReleased(const FInputActionValue& Value);
+
+	void EquipWeapon(ABaseItem* WeaponToEquip);
+	
+	// client send equipweapon request to server
 	UFUNCTION(Server, Reliable)
 	void ServerEquipWeapon();
 	
@@ -59,21 +69,17 @@ public:
 	UWidgetComponent *OverheadInfo;
 
 private:
-	// UPROPERTY(VisibleAnywhere, Category = "Inventory", Replicated)
 	UPROPERTY(EditAnywhere, Category = "Inventory", Replicated, ReplicatedUsing = OnRep_ClientOverlappingItem)
 	TArray<ABaseItem*> OverlappingItems;
 	UPROPERTY(EditAnywhere, Replicated, ReplicatedUsing = OnRep_ClientRemoveOverlappingItem)
 	ABaseItem *RemovedOverlappingItem;
 public:
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
 	UPROPERTY(EditInstanceOnly,Replicated, BlueprintReadWrite, Category = "Inventory")
 	ABaseItem *LastTraceItem;
 
 public:
 	void SetLastTraceItem(ABaseItem *TraceItem);
 	
-	// UPROPERTY(ReplicatedUsing = OnRep_OverlappingItem)
-	// ABaseItem *LastOverlapItem;
 private:
 	UFUNCTION()
 	void OnRep_ClientOverlappingItem();
@@ -81,7 +87,6 @@ private:
 	void OnRep_ClientRemoveOverlappingItem(ABaseItem *RemovedItem);
 
 public:
-	// FORCEINLINE void SetLastOverlapItem(ABaseItem *OverlapItem) { LastOverlapItem = OverlapItem; }
 	void SetRemovedOverlappingItem(ABaseItem* Item);
 	void AddOverlappingItem(ABaseItem *OverlappingItem);
 	void RemoveOverlappingItem(ABaseItem *OverlappingItem);
@@ -91,4 +96,12 @@ private:
 	class UCombatComponent *CharacterCombatComponent;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<ABaseItem> DefaultItemBP;
+
+#pragma region Anim
+	UPROPERTY(EditAnywhere, Category = Anim)
+	class UAnimMontage *FireWeaponMontage;
+
+public:
+	void PlayFireMontage(bool bAiming);
+#pragma endregion
 };
