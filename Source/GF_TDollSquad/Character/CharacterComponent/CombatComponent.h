@@ -26,6 +26,7 @@ public:
 	void CrosshairTrace(FHitResult &TraceHitResult);
 	
 private:
+	UPROPERTY(EditAnywhere)
 	ABaseCharacter* Character;
 	UPROPERTY(EditAnywhere)
 	ABaseItem *EquippedItem;

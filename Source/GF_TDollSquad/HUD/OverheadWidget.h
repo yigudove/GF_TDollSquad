@@ -17,8 +17,12 @@ class GF_TDOLLSQUAD_API UOverheadWidget: public UUserWidget
 public:
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* ControllerName;
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* LastTraceItemName;
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE UTextBlock* GetControllerNameBlock(){return ControllerName;}
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE UTextBlock* GetLastTraceItemNameBlock(){return LastTraceItemName;}
 	
 	UFUNCTION(BlueprintCallable)
 	void SetTextBlock(UTextBlock* BlockToSet, FString TextToSet);

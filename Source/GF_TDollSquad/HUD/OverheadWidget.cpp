@@ -55,7 +55,7 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* CurPawn)
                         break;
         }
 
-        SetTextBlock(ControllerName, FString("LocalNetRole: ") + LocalNetRole + FString(" RemoteNetRole: ") + RemotelNetRole);
+        // SetTextBlock(ControllerName, FString("LocalNetRole: ") + LocalNetRole + FString(" RemoteNetRole: ") + RemotelNetRole);
 }
 
 void UOverheadWidget::NativeDestruct()

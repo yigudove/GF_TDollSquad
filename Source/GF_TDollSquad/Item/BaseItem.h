@@ -26,6 +26,7 @@ class GF_TDOLLSQUAD_API ABaseItem : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ABaseItem();
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -59,13 +60,13 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USphereComponent *AreaSphere;
 
-	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	EItemState WeaponState;
+	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties", Replicated)
+	EItemState ItemState;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	UWidgetComponent *ItemDropInfoWidget;
 public:
 	UFUNCTION()
 	void SetDropInfoWidgetVisibility(bool bVisible);
-	FORCEINLINE void SetItemState(EItemState State) { WeaponState = State; }
+	FORCEINLINE void SetItemState(EItemState State) { ItemState = State; }
 };

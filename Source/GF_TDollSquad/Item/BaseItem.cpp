@@ -4,6 +4,7 @@
 #include "BaseItem.h"
 #include "Components/SphereComponent.h"
 #include "GF_TDollSquad/Character/BaseCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 
 // Sets default values
@@ -15,16 +16,16 @@ ABaseItem::ABaseItem()
 
 	ItemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ItemMesh"));
 	SetRootComponent(ItemMesh);
-	// ItemMesh->SetCollisionResponseToAllChannels(ECR_Block);
-	// ItemMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
-	// ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	// ItemMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	ItemMesh->SetCollisionResponseToAllChannels(ECR_Block);
+	ItemMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ItemMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
-	ItemMesh->SetSimulatePhysics(false);
-	ItemMesh->SetEnableGravity(false);
-	ItemMesh->SetVisibility(true);
-	ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// ItemMesh->SetSimulatePhysics(false);
+	// ItemMesh->SetEnableGravity(false);
+	// ItemMesh->SetVisibility(true);
+	// ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	// ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("ItemAreaSphere"));
 	AreaSphere->SetupAttachment(RootComponent);
@@ -33,6 +34,13 @@ ABaseItem::ABaseItem()
 
 	ItemDropInfoWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ItemDropInfo"));
 	ItemDropInfoWidget->SetupAttachment(RootComponent);
+}
+
+void ABaseItem::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABaseItem, ItemState);
 }
 
 // Called when the game starts or when spawned

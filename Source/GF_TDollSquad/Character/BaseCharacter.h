@@ -49,6 +49,9 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
+	UFUNCTION(Server, Reliable)
+	void ServerEquipWeapon();
+	
 	void QuitGame(const FInputActionValue& Value);
 
 public:
@@ -61,7 +64,9 @@ private:
 	TArray<ABaseItem*> OverlappingItems;
 	UPROPERTY(EditAnywhere, Replicated, ReplicatedUsing = OnRep_ClientRemoveOverlappingItem)
 	ABaseItem *RemovedOverlappingItem;
-	UPROPERTY(VisibleAnywhere, Category = "Inventory")
+public:
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory")
+	UPROPERTY(EditInstanceOnly,Replicated, BlueprintReadWrite, Category = "Inventory")
 	ABaseItem *LastTraceItem;
 
 public:

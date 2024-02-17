@@ -7,6 +7,7 @@
 #include "GameFramework/GameUserSettings.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/PlayerCameraManager.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -36,7 +37,8 @@ ABaseCharacter::ABaseCharacter()
 	CharacterCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("CharacterFollowCamera"));
 	CharacterCamera->SetupAttachment(CameraSpringArm);
 	CharacterCamera->bUsePawnControlRotation = false;
-
+	CharacterCamera->bCameraMeshHiddenInGame = false;
+	
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
@@ -46,9 +48,12 @@ ABaseCharacter::ABaseCharacter()
 
 	CharacterCombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CharacterCombatComponent->SetIsReplicated(true);
+	CharacterCombatComponent->Character = this;
 
 	// ABaseWeapon *SpawnWeapon = GetWorld()->SpawnActor<ABaseWeapon>(DefaultItemBP);
 	// CharacterCombatComponent->EquipWeapon(SpawnWeapon);
+
+	LastTraceItem = nullptr;
 }
 
 void ABaseCharacter::BeginPlay()
@@ -66,7 +71,24 @@ void ABaseCharacter::BeginPlay()
 
 void ABaseCharacter::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime);	
+
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (PlayerController)
+	{
+		APlayerCameraManager* CameraManager = PlayerController->PlayerCameraManager;
+		if (CameraManager)
+		{
+			FString CharacterName = GetName();
+			FVector CameraLocation = CameraManager->GetCameraLocation();
+
+			// 输出角色名称和相机位置到日志
+			UE_LOG(LogTemp, Warning, TEXT("Character Name: %s, Camera Location: %s"), *CharacterName, *CameraLocation.ToString());
+			DrawDebugSphere(GetWorld(), CameraLocation, 24.0f, 12, FColor::Red);
+		}
+	}
+	
+	// DrawDebugSphere(GetWorld(), CharacterCamera->bCameraMeshHiddenInGame = false, 12.0f, 12, FColor::Purple);
 	//
 	// for(ABaseItem *Item : OverlappingItems)
 	// {
@@ -78,13 +100,10 @@ void ABaseCharacter::Tick(float DeltaTime)
 void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	// DOREPLIFETIME(ABaseCharacter, LastOverlapItem);
-	// DOREPLIFETIME_CONDITION(ABaseCharacter, LastOverlapItem, COND_OwnerOnly, );
-	// DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingItems, COND_OwnerOnly);
+	
 	DOREPLIFETIME_CONDITION_NOTIFY(ABaseCharacter, OverlappingItems, COND_OwnerOnly, REPNOTIFY_Always);
-
 	DOREPLIFETIME(ABaseCharacter, RemovedOverlappingItem);
+	DOREPLIFETIME(ABaseCharacter, LastTraceItem);
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -149,22 +168,50 @@ void ABaseCharacter::Look(const FInputActionValue& Value)
 
 void ABaseCharacter::Interact(const FInputActionValue& Value)
 {
-	UE_LOG(LogTemp, Log, TEXT("Trigger Interact Action."));
-
-	if(CharacterCombatComponent && HasAuthority())
+	if(CharacterCombatComponent)
 	{
-		if(ABaseWeapon *DropWeapon = Cast<ABaseWeapon>(LastTraceItem))
+		if(HasAuthority()) // on server
 		{
-			CharacterCombatComponent->EquipWeapon(DropWeapon);
+			UE_LOG(LogTemp, Log, TEXT("CharacterCombatComponent 1."));
+			if(ABaseWeapon *DropWeapon = Cast<ABaseWeapon>(LastTraceItem))
+            {
+            	CharacterCombatComponent->EquipWeapon(DropWeapon);
+            }
+		}
+		else // on client
+		{
+			UE_LOG(LogTemp, Log, TEXT("CharacterCombatComponent 2."));
+			ServerEquipWeapon();
 		}
 	}
 
+}
+
+void ABaseCharacter::ServerEquipWeapon_Implementation()
+{
+	UE_LOG(LogTemp, Log, TEXT("CharacterCombatComponent 3."));
+	if(CharacterCombatComponent)
+	{
+		UE_LOG(LogTemp, Log, TEXT("CharacterCombatComponent 4."));
+		ABaseWeapon *DropWeapon = Cast<ABaseWeapon>(LastTraceItem);
+		if(LastTraceItem)
+	    {
+	            UE_LOG(LogTemp, Log, TEXT("LastTraceItem not nullptr."));
+	            CharacterCombatComponent->EquipWeapon(DropWeapon);
+	    }
+		else if(LastTraceItem == nullptr)
+		{
+			UE_LOG(LogTemp, Log, TEXT("LastTraceItem nullptr."));
+		}
+	}
 }
 
 void ABaseCharacter::QuitGame(const FInputActionValue& Value)
 {
 	UKismetSystemLibrary::QuitGame(GetWorld(),  GetWorld()->GetFirstPlayerController(), EQuitPreference::Quit, false);
 }
+
+
 
 void ABaseCharacter::SetLastTraceItem(ABaseItem* TraceItem)
 {
