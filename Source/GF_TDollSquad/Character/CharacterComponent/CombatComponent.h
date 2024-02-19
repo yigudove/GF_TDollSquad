@@ -40,7 +40,9 @@ private:
 	ABaseCharacter* Character;
 	UPROPERTY(EditAnywhere, Replicated)
 	ABaseItem *EquippedItem;
-
-	bool Firing;
+	UPROPERTY(VisibleAnywhere)
+	bool bFiring;
+	UPROPERTY(VisibleAnywhere)
+	bool bAiming;
 	
 };

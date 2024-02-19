@@ -110,7 +110,10 @@ void UCombatComponent::CrosshairTrace(FHitResult& TraceHitResult)
 			
 			if(ABaseItem *HitItem = Cast<ABaseItem>(TraceHitResult.GetActor()))
 			{
-				Character->SetLastTraceItem(HitItem);
+				if(Character->GetOverlappingItems().Contains(HitItem))
+				{
+					Character->SetLastTraceItem(HitItem);
+				}
 			}
 			else
 			{
@@ -123,9 +126,9 @@ void UCombatComponent::CrosshairTrace(FHitResult& TraceHitResult)
 
 void UCombatComponent::FireTrigger(bool bTrigger)
 {
-	Firing = true;
+	bFiring = bTrigger;
 
-	if(Firing)
+	if(bFiring)
 	{
 		ServerFireTigger();
 	}
@@ -134,11 +137,16 @@ void UCombatComponent::FireTrigger(bool bTrigger)
 
 void UCombatComponent::MulticastFireTrigger_Implementation()
 {
-	if(EquippedItem == nullptr) return;
+	if(EquippedItem == nullptr)
+	{
+		UE_LOG(LogTemp, Log, TEXT("MulticastFireTrigger_Implementation  EquippedItem == nullptr"));
+		return;
+	}
+
 	if(Character)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Component  FireTrigger"));
-		Character->PlayFireMontage(false);
+		Character->PlayFireMontage(bAiming);
 	}
 }
 

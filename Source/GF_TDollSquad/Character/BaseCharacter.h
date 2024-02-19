@@ -78,6 +78,7 @@ public:
 	ABaseItem *LastTraceItem;
 
 public:
+	TArray<ABaseItem*> GetOverlappingItems() { return OverlappingItems; }
 	void SetLastTraceItem(ABaseItem *TraceItem);
 	
 private:
