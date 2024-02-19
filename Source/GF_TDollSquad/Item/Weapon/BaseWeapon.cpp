@@ -6,6 +6,7 @@
 
 ABaseWeapon::ABaseWeapon()
 {
+        bReplicates = true;
         WeaponProjectileComponent = CreateDefaultSubobject<UProjectileComponent>(TEXT("CombatComponent"));
         WeaponProjectileComponent->SetIsReplicated(true);
         // WeaponProjectileComponent->Item = this;
@@ -23,6 +24,7 @@ void ABaseWeapon::BeginPlay()
 
 void ABaseWeapon::WeaponFire(const FVector& TraceTarget)
 {
+        if(!HasAuthority()) return;
         if(WeaponProjectileComponent)
         {
                 WeaponProjectileComponent->SpawnProjectile(TraceTarget);

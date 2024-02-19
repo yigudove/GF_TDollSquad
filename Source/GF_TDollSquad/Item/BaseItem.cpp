@@ -87,6 +87,7 @@ void ABaseItem::SetItemState(EItemState State)
 	{
 	case EItemState::EIS_Equipped:
 		SetDropInfoWidgetVisibility(false);
+		ItemMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	case EItemState::EIS_Drop:
@@ -102,6 +103,7 @@ void ABaseItem::OnRep_SwitchItemState()
 	{
 	case EItemState::EIS_Equipped:
 		SetDropInfoWidgetVisibility(false);
+		ItemMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	case EItemState::EIS_Drop:

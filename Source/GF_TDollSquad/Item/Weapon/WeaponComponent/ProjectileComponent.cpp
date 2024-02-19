@@ -38,9 +38,8 @@ void UProjectileComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 void UProjectileComponent::SpawnProjectile(const FVector& TraceTarget)
 {
-	UE_LOG(LogTemp, Log, TEXT("SpawnProjectile"));
 	APawn * InstigatorPawn = Cast<APawn>(GetOwner());
-	const USkeletalMeshSocket * FirePointSocket = Item->GetItemMesh()->GetSocketByName(FName("MuzzleFlash"));
+	const USkeletalMeshSocket * FirePointSocket = Item->GetItemMesh()->GetSocketByName(FName("FirePoint"));
 	if(FirePointSocket)
 	{
 		FTransform SocketTransform =  FirePointSocket->GetSocketTransform(Item->GetItemMesh());
