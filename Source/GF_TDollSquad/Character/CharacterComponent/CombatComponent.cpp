@@ -103,11 +103,15 @@ void UCombatComponent::CrosshairTrace(FHitResult& TraceHitResult)
 		FVector End = Start + CrosshairWorldDirection * TraceScale;
 		GetWorld()->LineTraceSingleByChannel(TraceHitResult, Start, End,ECC_Visibility);
 		DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, -1.0f, 0, 2.0f);
-		if(!TraceHitResult.bBlockingHit) { TraceHitResult.ImpactPoint = End; }
+		if(!TraceHitResult.bBlockingHit)
+		{
+			TraceHitResult.ImpactPoint = End;
+			TraceTarget = End;
+		}
 		else
 		{
 			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.0f, 12, FColor::Purple);
-			
+			TraceTarget = TraceHitResult.ImpactPoint;
 			if(ABaseItem *HitItem = Cast<ABaseItem>(TraceHitResult.GetActor()))
 			{
 				if(Character->GetOverlappingItems().Contains(HitItem))
@@ -147,6 +151,8 @@ void UCombatComponent::MulticastFireTrigger_Implementation()
 	{
 		UE_LOG(LogTemp, Log, TEXT("Component  FireTrigger"));
 		Character->PlayFireMontage(bAiming);
+		ABaseWeapon *EquipWeapon = Cast<ABaseWeapon>(EquippedItem);
+		EquipWeapon->WeaponFire(TraceTarget);
 	}
 }
 

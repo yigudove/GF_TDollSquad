@@ -2,4 +2,29 @@
 
 
 #include "BaseWeapon.h"
+#include "GF_TDollSquad/Item/Weapon/WeaponComponent/ProjectileComponent.h"
 
+ABaseWeapon::ABaseWeapon()
+{
+        WeaponProjectileComponent = CreateDefaultSubobject<UProjectileComponent>(TEXT("CombatComponent"));
+        WeaponProjectileComponent->SetIsReplicated(true);
+        // WeaponProjectileComponent->Item = this;
+}
+
+void ABaseWeapon::BeginPlay()
+{
+        Super::BeginPlay();
+
+        if(WeaponProjectileComponent)
+        {
+                WeaponProjectileComponent->Item = this;
+        }
+}
+
+void ABaseWeapon::WeaponFire(const FVector& TraceTarget)
+{
+        if(WeaponProjectileComponent)
+        {
+                WeaponProjectileComponent->SpawnProjectile(TraceTarget);
+        }
+}

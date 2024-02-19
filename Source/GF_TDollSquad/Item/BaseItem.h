@@ -54,7 +54,7 @@ protected:
 public:	
 	// virtual void Tick(float DeltaTime) override;
 
-private:
+protected:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent *ItemMesh;
 	// 用于检测重叠交互

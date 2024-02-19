@@ -3,6 +3,10 @@
 
 #include "ProjectileComponent.h"
 
+#include "Engine/SkeletalMeshSocket.h"
+#include "GF_TDollSquad/Item/BaseItem.h"
+#include "GF_TDollSquad/Item/Weapon/BaseProjectile.h"
+
 // Sets default values for this component's properties
 UProjectileComponent::UProjectileComponent()
 {
@@ -31,4 +35,35 @@ void UProjectileComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 	// ...
 }
+
+void UProjectileComponent::SpawnProjectile(const FVector& TraceTarget)
+{
+	UE_LOG(LogTemp, Log, TEXT("SpawnProjectile"));
+	APawn * InstigatorPawn = Cast<APawn>(GetOwner());
+	const USkeletalMeshSocket * FirePointSocket = Item->GetItemMesh()->GetSocketByName(FName("MuzzleFlash"));
+	if(FirePointSocket)
+	{
+		FTransform SocketTransform =  FirePointSocket->GetSocketTransform(Item->GetItemMesh());
+		FVector Transition = TraceTarget - SocketTransform.GetLocation();
+		FRotator TargetRotation = Transition.Rotation();
+		if(ProjectileClass)
+		{
+			FActorSpawnParameters SpawnParameters;
+			SpawnParameters.Owner = Item->GetOwner();
+			SpawnParameters.Instigator = InstigatorPawn;
+			UWorld *World = GetWorld();
+			if(World)
+			{
+				World->SpawnActor<ABaseProjectile>(
+					ProjectileClass,
+					SocketTransform.GetLocation(),
+					TargetRotation,
+					SpawnParameters
+				);
+			}
+		}
+	}
+}
+
+
 

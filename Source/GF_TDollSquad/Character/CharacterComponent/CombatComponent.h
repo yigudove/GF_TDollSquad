@@ -29,17 +29,17 @@ public:
 	void CrosshairTrace(FHitResult &TraceHitResult);
 
 	void FireTrigger(bool bTrigger);
-
 	UFUNCTION(Server, Reliable)
 	void ServerFireTigger();
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFireTrigger();
-	
+
 private:
 	UPROPERTY(EditAnywhere)
 	ABaseCharacter* Character;
 	UPROPERTY(EditAnywhere, Replicated)
 	ABaseItem *EquippedItem;
+	FVector TraceTarget;
 	UPROPERTY(VisibleAnywhere)
 	bool bFiring;
 	UPROPERTY(VisibleAnywhere)

@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "ProjectileComponent.generated.h"
 
+class ABaseProjectile;
+class ABaseItem;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class GF_TDOLLSQUAD_API UProjectileComponent : public UActorComponent
@@ -24,5 +26,12 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	UPROPERTY(EditAnywhere)
+	ABaseItem *Item;
+private:
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<ABaseProjectile> ProjectileClass;
+	
+public:
+	void SpawnProjectile(const FVector& TraceTarget);
 };

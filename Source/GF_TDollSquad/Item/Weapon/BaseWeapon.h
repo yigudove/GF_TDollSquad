@@ -6,12 +6,18 @@
 #include "../BaseItem.h"
 #include "BaseWeapon.generated.h"
 
-/**
- * 
- */
+class ABaseProjectile;
+
 UCLASS()
 class GF_TDOLLSQUAD_API ABaseWeapon : public ABaseItem
 {
 	GENERATED_BODY()
-	
+public:
+        ABaseWeapon();
+        virtual void BeginPlay() override;
+
+        UPROPERTY(VisibleAnywhere)
+        class UProjectileComponent *WeaponProjectileComponent;
+public:
+        void WeaponFire(const FVector& TraceTarget);
 };

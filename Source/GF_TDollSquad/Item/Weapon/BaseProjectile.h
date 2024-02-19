@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "WeaponProjectile.generated.h"
+#include "BaseProjectile.generated.h"
 
 UCLASS()
-class GF_TDOLLSQUAD_API AWeaponProjectile : public AActor
+class GF_TDOLLSQUAD_API ABaseProjectile : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AWeaponProjectile();
+	ABaseProjectile();
 
 protected:
 	// Called when the game starts or when spawned
