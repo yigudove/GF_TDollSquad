@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Sound/SoundCue.h"
 
 
 // Sets default values
@@ -46,6 +47,36 @@ void ABaseProjectile::BeginPlay()
 			EAttachLocation::KeepWorldPosition
 		);
 	}
+
+	if(HasAuthority())
+	{
+		ProjectileCollisionBox->OnComponentHit.AddDynamic(this, &ABaseProjectile::OnHit);
+	}
+}
+
+void ABaseProjectile::Destroyed()
+{
+	Super::Destroyed();
+
+	if(ImpactParticle)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticle, GetActorTransform());
+	}
+	if(ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
+	if(TracerComponent)
+	{
+		TracerComponent->DestroyComponent();
+		TracerComponent = nullptr; // 可选，将指针置为空以防止意外使用
+	}
+}
+
+void ABaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+							FVector NormalImpulse, const FHitResult& Hit)
+{
+	Destroy();
 }
 
 // Called every frame

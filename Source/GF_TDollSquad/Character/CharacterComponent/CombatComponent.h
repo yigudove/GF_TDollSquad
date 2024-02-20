@@ -30,16 +30,17 @@ public:
 
 	void FireTrigger(bool bTrigger);
 	UFUNCTION(Server, Reliable)
-	void ServerFireTigger();
+	void ServerFireTigger(const FVector_NetQuantize TraceHitTarget);
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastFireTrigger();
+	void MulticastFireTrigger(const FVector_NetQuantize TraceHitTarget);
 
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(VisibleAnywhere)
 	ABaseCharacter* Character;
-	UPROPERTY(EditAnywhere, Replicated)
+	UPROPERTY(VisibleAnywhere, Replicated)
 	ABaseItem *EquippedItem;
-	FVector TraceTarget;
+	UPROPERTY(VisibleAnywhere, Replicated)
+	FHitResult TraceTarget;
 	UPROPERTY(VisibleAnywhere)
 	bool bFiring;
 	UPROPERTY(VisibleAnywhere)

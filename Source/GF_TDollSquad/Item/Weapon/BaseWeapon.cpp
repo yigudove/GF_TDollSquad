@@ -22,9 +22,11 @@ void ABaseWeapon::BeginPlay()
         }
 }
 
+
+
 void ABaseWeapon::WeaponFire(const FVector& TraceTarget)
 {
-        if(!HasAuthority()) return;
+        // if(!HasAuthority()) return;
         if(WeaponProjectileComponent)
         {
                 WeaponProjectileComponent->SpawnProjectile(TraceTarget);

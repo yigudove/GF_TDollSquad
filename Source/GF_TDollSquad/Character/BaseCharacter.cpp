@@ -80,7 +80,7 @@ void ABaseCharacter::Tick(float DeltaTime)
 		{
 			FString CharacterName = GetName();
 			FVector CameraLocation = CameraManager->GetCameraLocation();
-			DrawDebugSphere(GetWorld(), CameraLocation, 24.0f, 12, FColor::Red);
+			// DrawDebugSphere(GetWorld(), CameraLocation, 24.0f, 12, FColor::Red);
 		}
 	}
 	

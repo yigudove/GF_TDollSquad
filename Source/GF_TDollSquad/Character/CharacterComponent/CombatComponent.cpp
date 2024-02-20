@@ -27,6 +27,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedItem);
+	DOREPLIFETIME(UCombatComponent, TraceTarget);
 }
 
 void UCombatComponent::EquipItem(ABaseWeapon* WeaponToEquip)
@@ -106,12 +107,10 @@ void UCombatComponent::CrosshairTrace(FHitResult& TraceHitResult)
 		if(!TraceHitResult.bBlockingHit)
 		{
 			TraceHitResult.ImpactPoint = End;
-			TraceTarget = End;
 		}
 		else
 		{
 			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.0f, 12, FColor::Purple);
-			TraceTarget = TraceHitResult.ImpactPoint;
 			if(ABaseItem *HitItem = Cast<ABaseItem>(TraceHitResult.GetActor()))
 			{
 				if(Character->GetOverlappingItems().Contains(HitItem))
@@ -134,12 +133,17 @@ void UCombatComponent::FireTrigger(bool bTrigger)
 
 	if(bFiring)
 	{
-		ServerFireTigger();
+		ServerFireTigger(TraceTarget.ImpactPoint);
 	}
 
 }
 
-void UCombatComponent::MulticastFireTrigger_Implementation()
+void UCombatComponent::ServerFireTigger_Implementation(const FVector_NetQuantize TraceHitTarget)
+{
+	MulticastFireTrigger(TraceHitTarget);
+}
+
+void UCombatComponent::MulticastFireTrigger_Implementation(const FVector_NetQuantize TraceHitTarget)
 {
 	if(EquippedItem == nullptr)
 	{
@@ -152,24 +156,18 @@ void UCombatComponent::MulticastFireTrigger_Implementation()
 		UE_LOG(LogTemp, Log, TEXT("Component  FireTrigger"));
 		Character->PlayFireMontage(bAiming);
 		ABaseWeapon *EquipWeapon = Cast<ABaseWeapon>(EquippedItem);
-		EquipWeapon->WeaponFire(TraceTarget);
+		EquipWeapon->WeaponFire(TraceHitTarget);
 	}
 }
-
-void UCombatComponent::ServerFireTigger_Implementation()
-{
-	MulticastFireTrigger();
-}
-
 void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FHitResult HitResult;
+	// FHitResult HitResult;
 	// if(Character->IsLocallyControlled() && Character->IsPlayerControlled())
 	// {
 	// 	CrosshairTrace(HitResult);
 	// }
-	CrosshairTrace(HitResult);
+	CrosshairTrace(TraceTarget);
 }
 
