@@ -115,6 +115,10 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		PEI->BindAction(FireAction, ETriggerEvent::Started, this, &ABaseCharacter::FirePressed);
 		PEI->BindAction(FireAction, ETriggerEvent::Ongoing, this, &ABaseCharacter::FireOngoing);
 		PEI->BindAction(FireAction, ETriggerEvent::Completed, this, &ABaseCharacter::FireReleased);
+
+		PEI->BindAction(SpFireAction, ETriggerEvent::Started, this, &ABaseCharacter::SpFirePressed);
+		PEI->BindAction(SpFireAction, ETriggerEvent::Ongoing, this, &ABaseCharacter::SpFireOngoing);
+		PEI->BindAction(SpFireAction, ETriggerEvent::Completed, this, &ABaseCharacter::SpFireReleased);
 	}
 }
 
@@ -192,6 +196,28 @@ void ABaseCharacter::FireReleased(const FInputActionValue& Value)
 	if(CharacterCombatComponent)
 	{
 		CharacterCombatComponent->FireTrigger(false);
+	}
+}
+
+void ABaseCharacter::SpFirePressed(const FInputActionValue& Value)
+{
+	if(CharacterCombatComponent)
+	{
+		// CharacterCombatComponent->bAiming = true;
+		CharacterCombatComponent->SetAiming(true);
+	}
+}
+
+void ABaseCharacter::SpFireOngoing(const FInputActionValue& Value)
+{
+}
+
+void ABaseCharacter::SpFireReleased(const FInputActionValue& Value)
+{
+	if(CharacterCombatComponent)
+	{
+		// CharacterCombatComponent->bAiming = false;
+		CharacterCombatComponent->SetAiming(false);
 	}
 }
 
@@ -299,4 +325,9 @@ void ABaseCharacter::PlayFireMontage(bool bAiming)
 		AnimInstance->Montage_JumpToSection(SectionName);
 		
 	}
+}
+
+bool ABaseCharacter::IsAiming()
+{
+	return (CharacterCombatComponent && CharacterCombatComponent->bAiming);
 }

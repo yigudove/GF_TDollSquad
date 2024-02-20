@@ -7,6 +7,8 @@
 #include "GameplayHUD.generated.h"
 
 class UTexture2D;
+class UBaseCharacterStats;
+class UUserWidget;
 
 UCLASS()
 class GF_TDOLLSQUAD_API AGameplayHUD : public AHUD
@@ -33,4 +35,12 @@ public:
         UTexture2D *CrosshairLeft;
         UPROPERTY(EditAnywhere, Category = Crosshair)
         UTexture2D *CrosshairRight;
+
+        UBaseCharacterStats *CharacterStats;
+        UPROPERTY(EditAnywhere, Category = "PlayerStats")
+        TSubclassOf<UUserWidget> CharacterStatsClass;
+
+protected:
+        virtual void BeginPlay() override;
+        void AddCharacterStats();
 };

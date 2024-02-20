@@ -3,6 +3,9 @@
 
 #include "GameplayHUD.h"
 
+#include "BaseCharacterStats.h"
+#include "Blueprint/UserWidget.h"
+
 void AGameplayHUD::DrawHUD()
 {
         Super::DrawHUD();
@@ -57,4 +60,21 @@ void AGameplayHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, 
                 1.0f,
                 FLinearColor::White
         );
+}
+
+void AGameplayHUD::BeginPlay()
+{
+        Super::BeginPlay();
+        
+        AddCharacterStats();
+}
+
+void AGameplayHUD::AddCharacterStats()
+{
+        APlayerController *PlayerController = GetOwningPlayerController();
+        if(PlayerController && CharacterStatsClass)
+        {
+                CharacterStats = CreateWidget<UBaseCharacterStats>(PlayerController, CharacterStatsClass);
+                CharacterStats->AddToViewport();
+        }
 }

@@ -31,6 +31,8 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedItem);
 	DOREPLIFETIME(UCombatComponent, TraceTarget);
+	DOREPLIFETIME(UCombatComponent, bAiming);
+	DOREPLIFETIME(UCombatComponent, Health);
 }
 
 void UCombatComponent::EquipItem(ABaseWeapon* WeaponToEquip)
@@ -85,6 +87,24 @@ void UCombatComponent::FireTrigger(bool bTrigger)
 		ServerFireTigger(TraceTarget.ImpactPoint);
 	}
 
+}
+
+void UCombatComponent::SetAiming(bool bIsAiming)
+{
+	bAiming = bIsAiming;
+	if(!Character->HasAuthority())
+	{
+		ServerSetAiming(bAiming);
+	}
+}
+
+void UCombatComponent::OnRep_Health()
+{
+}
+
+void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
+{
+	bAiming = bIsAiming;
 }
 
 void UCombatComponent::ServerFireTigger_Implementation(const FVector_NetQuantize TraceHitTarget)

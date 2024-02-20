@@ -37,6 +37,17 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFireTrigger(const FVector_NetQuantize TraceHitTarget);
 
+	void SetAiming(bool bIsAiming);
+	UFUNCTION(Server, Reliable)
+	void ServerSetAiming(bool bIsAiming);
+
+	UPROPERTY(EditAnywhere, Category = "Player Stats")
+	float MaxHealth = 100.0f;
+	UPROPERTY(ReplicatedUsing = OnRep_Health,  VisibleAnywhere, Category = "Player Stats")
+	float Health = 100.0f;
+
+	UFUNCTION()
+	void OnRep_Health();
 private:
 	UPROPERTY(VisibleAnywhere)
 	ABaseCharacter* Character;
@@ -50,7 +61,7 @@ private:
 	FHitResult TraceTarget;
 	UPROPERTY(VisibleAnywhere)
 	bool bFiring;
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Replicated)
 	bool bAiming;
 	
 };

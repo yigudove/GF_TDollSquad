@@ -46,6 +46,8 @@ protected:
 	class UInputAction *QuitGameAction;
 	UPROPERTY(EditAnywhere, Category = Input)
 	UInputAction *FireAction;
+    UPROPERTY(EditAnywhere, Category = Input)
+    UInputAction *SpFireAction;
 #pragma  endregion
 
 	void Move(const FInputActionValue& Value);
@@ -55,6 +57,10 @@ protected:
 	void FirePressed(const FInputActionValue& Value);
 	void FireOngoing(const FInputActionValue& Value);
 	void FireReleased(const FInputActionValue& Value);
+
+	void SpFirePressed(const FInputActionValue& Value);
+	void SpFireOngoing(const FInputActionValue& Value);
+	void SpFireReleased(const FInputActionValue& Value);
 
 	void EquipWeapon(ABaseItem* WeaponToEquip);
 	
@@ -104,5 +110,6 @@ private:
 
 public:
 	void PlayFireMontage(bool bAiming);
+	bool IsAiming();
 #pragma endregion
 };
