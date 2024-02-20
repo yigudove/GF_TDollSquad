@@ -5,8 +5,11 @@
 #include "GF_TDollSquad/Item/Weapon/BaseWeapon.h"
 
 #include "Engine/SkeletalMeshSocket.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+
+#include "GF_TDollSquad/HUD/GameplayHUD.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -70,6 +73,59 @@ void UCombatComponent::DropItem()
 	}
 }
 
+
+
+
+void UCombatComponent::FireTrigger(bool bTrigger)
+{
+	bFiring = bTrigger;
+
+	if(bFiring)
+	{
+		ServerFireTigger(TraceTarget.ImpactPoint);
+	}
+
+}
+
+void UCombatComponent::ServerFireTigger_Implementation(const FVector_NetQuantize TraceHitTarget)
+{
+	MulticastFireTrigger(TraceHitTarget);
+}
+
+void UCombatComponent::MulticastFireTrigger_Implementation(const FVector_NetQuantize TraceHitTarget)
+{
+	if(EquippedItem == nullptr)
+	{
+		UE_LOG(LogTemp, Log, TEXT("MulticastFireTrigger_Implementation  EquippedItem == nullptr"));
+		return;
+	}
+
+	if(Character)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Component  FireTrigger"));
+		Character->PlayFireMontage(bAiming);
+		ABaseWeapon *EquipWeapon = Cast<ABaseWeapon>(EquippedItem);
+		EquipWeapon->WeaponFire(TraceHitTarget);
+	}
+}
+
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	// FHitResult HitResult;
+	// if(Character->IsLocallyControlled() && Character->IsPlayerControlled())
+	// {
+	// 	CrosshairTrace(HitResult);
+	// }
+	CrosshairTrace(TraceTarget);
+	// if(Character->IsLocallyControlled() && Character->IsPlayerControlled()) 
+	// {
+	// 	SetHUDCrosshair(DeltaTime);
+	// }
+	SetHUDCrosshair(DeltaTime);
+}
+
 void UCombatComponent::CrosshairTrace(FHitResult& TraceHitResult)
 {
 	FVector2D ViewportSize;
@@ -124,50 +180,26 @@ void UCombatComponent::CrosshairTrace(FHitResult& TraceHitResult)
 			}
 		}
 	}
-	
 }
 
-void UCombatComponent::FireTrigger(bool bTrigger)
+void UCombatComponent::SetHUDCrosshair(float DeltaTime)
 {
-	bFiring = bTrigger;
+	if(Character == nullptr || Character->Controller == nullptr) return;
 
-	if(bFiring)
+	// CharacterController = CharacterController == nullptr ? Cast<ABasePlayerController>(Character->Controller) : CharacterController;
+	CharacterController = CharacterController == nullptr ? Cast<APlayerController>(Character->Controller) : CharacterController;
+	if(CharacterController)
 	{
-		ServerFireTigger(TraceTarget.ImpactPoint);
-	}
-
-}
-
-void UCombatComponent::ServerFireTigger_Implementation(const FVector_NetQuantize TraceHitTarget)
-{
-	MulticastFireTrigger(TraceHitTarget);
-}
-
-void UCombatComponent::MulticastFireTrigger_Implementation(const FVector_NetQuantize TraceHitTarget)
-{
-	if(EquippedItem == nullptr)
-	{
-		UE_LOG(LogTemp, Log, TEXT("MulticastFireTrigger_Implementation  EquippedItem == nullptr"));
-		return;
-	}
-
-	if(Character)
-	{
-		UE_LOG(LogTemp, Log, TEXT("Component  FireTrigger"));
-		Character->PlayFireMontage(bAiming);
-		ABaseWeapon *EquipWeapon = Cast<ABaseWeapon>(EquippedItem);
-		EquipWeapon->WeaponFire(TraceHitTarget);
+		GPHUD = GPHUD == nullptr ? Cast<AGameplayHUD>(CharacterController->GetHUD()) : GPHUD;
+		if(GPHUD)
+		{
+			FVector2D SpeedRange(0.0f, Character->GetCharacterMovement()->MaxWalkSpeed);
+			FVector2D Mutiplier(0.0f, 1.0f);
+			FVector Velocity = Character->GetVelocity();
+			Velocity.Z = 0.0f;
+					
+			// GPHUD->SetCrosshairSpread(FMath::GetMappedRangeValueClamped(SpeedRange, Mutiplier, Velocity.Size())) ;
+			// GPHUD->DrawHUD();
+		}
 	}
 }
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// FHitResult HitResult;
-	// if(Character->IsLocallyControlled() && Character->IsPlayerControlled())
-	// {
-	// 	CrosshairTrace(HitResult);
-	// }
-	CrosshairTrace(TraceTarget);
-}
-

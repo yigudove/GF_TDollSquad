@@ -7,6 +7,8 @@
 class ABaseCharacter;
 class ABaseItem;
 class ABaseWeapon;
+class AGameplayHUD;
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class GF_TDOLLSQUAD_API UCombatComponent : public UActorComponent
@@ -27,6 +29,7 @@ public:
 	void DropItem();
 	
 	void CrosshairTrace(FHitResult &TraceHitResult);
+	void SetHUDCrosshair(float DeltaTime);
 
 	void FireTrigger(bool bTrigger);
 	UFUNCTION(Server, Reliable)
@@ -37,6 +40,10 @@ public:
 private:
 	UPROPERTY(VisibleAnywhere)
 	ABaseCharacter* Character;
+	UPROPERTY(VisibleAnywhere)
+	APlayerController* CharacterController;
+	UPROPERTY(VisibleAnywhere)
+	AGameplayHUD *GPHUD;
 	UPROPERTY(VisibleAnywhere, Replicated)
 	ABaseItem *EquippedItem;
 	UPROPERTY(VisibleAnywhere, Replicated)
