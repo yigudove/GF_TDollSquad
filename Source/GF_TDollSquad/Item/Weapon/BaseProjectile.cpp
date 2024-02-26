@@ -4,6 +4,7 @@
 #include "BaseProjectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/BoxComponent.h"
+#include "GF_TDollSquad/Character/BaseCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -24,6 +25,7 @@ ABaseProjectile::ABaseProjectile()
 	ProjectileCollisionBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectMovement"));
 	ProjectileMovementComponent->UpdateComponentVelocity();
@@ -76,6 +78,14 @@ void ABaseProjectile::Destroyed()
 void ABaseProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 							FVector NormalImpulse, const FHitResult& Hit)
 {
+	ABaseCharacter *HitCharacter = Cast<ABaseCharacter>(OtherActor);
+
+	if(HitCharacter)
+	{
+		UE_LOG(LogTemp, Log, TEXT("FFFFFFF"))
+		HitCharacter->PlayHitReactMontage();
+	}
+	
 	Destroy();
 }
 

@@ -31,4 +31,9 @@ private:
 
         FRotator CharacterRotationLastFrame;
         FRotator CharacterRotation;
+        
+        UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+        float AimYawOffset;
+        UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+        float AimPitchOffset;
 };

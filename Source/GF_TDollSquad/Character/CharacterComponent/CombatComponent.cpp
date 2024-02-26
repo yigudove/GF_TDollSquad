@@ -123,7 +123,7 @@ void UCombatComponent::MulticastFireTrigger_Implementation(const FVector_NetQuan
 	if(Character)
 	{
 		UE_LOG(LogTemp, Log, TEXT("Component  FireTrigger"));
-		Character->PlayFireMontage(bAiming);
+		// Character->PlayFireMontage(bAiming);
 		ABaseWeapon *EquipWeapon = Cast<ABaseWeapon>(EquippedItem);
 		EquipWeapon->WeaponFire(TraceHitTarget);
 	}

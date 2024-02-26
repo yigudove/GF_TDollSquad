@@ -19,6 +19,7 @@
 #include "OnlineSubsystem.h"
 #include "CharacterComponent/CombatComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
 ABaseCharacter::ABaseCharacter()
@@ -75,17 +76,19 @@ void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);	
 
-	APlayerController* PlayerController = Cast<APlayerController>(GetController());
-	if (PlayerController)
-	{
-		APlayerCameraManager* CameraManager = PlayerController->PlayerCameraManager;
-		if (CameraManager)
-		{
-			FString CharacterName = GetName();
-			FVector CameraLocation = CameraManager->GetCameraLocation();
-			// DrawDebugSphere(GetWorld(), CameraLocation, 24.0f, 12, FColor::Red);
-		}
-	}
+	// APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	// if (PlayerController)
+	// {
+	// 	APlayerCameraManager* CameraManager = PlayerController->PlayerCameraManager;
+	// 	if (CameraManager)
+	// 	{
+	// 		FString CharacterName = GetName();
+	// 		FVector CameraLocation = CameraManager->GetCameraLocation();
+	// 		// DrawDebugSphere(GetWorld(), CameraLocation, 24.0f, 12, FColor::Red);
+	// 	}
+	// }
+
+	AimOffset(DeltaTime);
 	
 	// DrawDebugSphere(GetWorld(), CharacterCamera->bCameraMeshHiddenInGame = false, 12.0f, 12, FColor::Purple);
 	//
@@ -320,17 +323,56 @@ void ABaseCharacter::PlayFireMontage(bool bAiming)
 	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
 	if(AnimInstance && FireWeaponMontage)
 	{
-		UE_LOG(LogTemp, Log, TEXT("AnimInstance && FireWeaponMontage"));
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
 		// SectionName = bAiming ? FName("AimingFire") : FName("HipFire");
 		SectionName = FName("HipFire");
 		AnimInstance->Montage_JumpToSection(SectionName);
-		
+	}
+}
+
+void ABaseCharacter::PlayHitReactMontage()
+{
+	// if(CharacterCombatComponent == nullptr || CharacterCombatComponent->EquippedItem == nullptr) return;
+	
+	UAnimInstance *AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && HitReactMontage)
+	{
+		UE_LOG(LogTemp, Log, TEXT("AnimInstance && HitReactMontage"));
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName;
+		SectionName = FName("BackHit");
+		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
 
 bool ABaseCharacter::IsAiming()
 {
 	return (CharacterCombatComponent && CharacterCombatComponent->bAiming);
+}
+
+void ABaseCharacter::AimOffset(float DeltaTime)
+{
+	// if(CharacterCombatComponent && CharacterCombatComponent->EquippedItem == nullptr) return;
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float CharacterSpeed = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if(CharacterSpeed == 0.0f && !bIsInAir)
+	{
+		FRotator CurrentAimRotation =  FRotator(0.0f, GetBaseAimRotation().Yaw, 0.0f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		AO_Yaw = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw = false;
+	}
+
+	if(CharacterSpeed > 0.0f || bIsInAir)
+	{
+		StartingAimRotation =  FRotator(0.0f, GetBaseAimRotation().Yaw, 0.0f);
+		AO_Yaw = 0.0f;
+		bUseControllerRotationYaw = true;
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch;
 }

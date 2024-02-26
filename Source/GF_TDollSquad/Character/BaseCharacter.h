@@ -106,10 +106,21 @@ private:
 
 #pragma region Anim
 	UPROPERTY(EditAnywhere, Category = Anim)
-	class UAnimMontage *FireWeaponMontage;
+	UAnimMontage *FireWeaponMontage;
+	UPROPERTY(EditAnywhere, Category = Anim)
+	UAnimMontage *HitReactMontage;
 
+	void AimOffset(float DeltaTime);
+	float AO_Yaw;
+	float AO_Pitch;
+	FRotator StartingAimRotation;
+	
+	
 public:
 	void PlayFireMontage(bool bAiming);
+	void PlayHitReactMontage();
 	bool IsAiming();
+	FORCEINLINE float GetAOYaw() const { return AO_Yaw; }
+	FORCEINLINE float GetAOPitch() const { return AO_Pitch; }
 #pragma endregion
 };
