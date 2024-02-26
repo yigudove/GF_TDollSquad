@@ -53,6 +53,9 @@ ABaseCharacter::ABaseCharacter()
 	// CharacterCombatComponent->EquipWeapon(SpawnWeapon);
 
 	LastTraceItem = nullptr;
+
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	bUseControllerRotationYaw = true;
 }
 
 void ABaseCharacter::BeginPlay()

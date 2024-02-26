@@ -39,5 +39,6 @@ void UBaseAnimInstance::NativeUpdateAnimation(float DeltaTime)
         const float Target = Delta.Yaw / DeltaTime;
         const float Interp = FMath::FInterpTo(Lean, Target, DeltaTime, 6.f);
         Lean = FMath::Clamp(Interp, -90.f, 90.f);
-        
+
+        UE_LOG(LogTemp, Log, TEXT("Yaw: %f, Lean: %f"), YawOffset, Lean);
 }
